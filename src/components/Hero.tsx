@@ -1,12 +1,18 @@
 import { Badge, Button, Card, CardContent } from "@bytecats/ui-kit";
+import HeroWebGL from "./HeroWebGL";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden pt-16">
-      <div className="grid-bg absolute inset-0" />
-      <div className="glow-orb absolute -top-32 left-1/2 h-[600px] w-[800px] -translate-x-1/2" />
+    <section className="relative overflow-hidden bg-slate-950 pt-16">
+      {/* WebGL background layer — absolute, behind content, no CLS */}
+      <div className="absolute inset-0 z-0" aria-hidden="true">
+        <HeroWebGL />
+        {/* subtle grid + orb kept as low-opacity overlay for fallback/texture */}
+        <div className="grid-bg pointer-events-none absolute inset-0 opacity-40" />
+        <div className="glow-orb pointer-events-none absolute -top-32 left-1/2 h-[600px] w-[800px] -translate-x-1/2 opacity-60" />
+      </div>
 
-      <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-20 md:pb-32 md:pt-32">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 pb-24 pt-20 md:pb-32 md:pt-32">
         <div className="mx-auto max-w-3xl text-center">
           <Badge
             variant="outline"

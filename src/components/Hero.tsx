@@ -8,12 +8,12 @@ export function Hero() {
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-seridian-500/20 bg-seridian-500/5 px-4 py-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-seridian-400" />
-            <span className="text-sm text-seridian-300">
+            <span className="font-mono text-sm text-seridian-300">
               Cloud Infrastructure & Application Development
             </span>
           </div>
 
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl md:leading-[1.1]">
+          <h1 className="font-display text-4xl font-bold leading-tight tracking-tight text-white md:text-6xl md:leading-[1.1]">
             Build and scale with{" "}
             <span className="gradient-text">clarity and confidence</span>
           </h1>
@@ -50,7 +50,7 @@ export function Hero() {
               key={stat.label}
               className="card-glow rounded-xl border border-white/5 bg-slate-850/50 p-6 text-center backdrop-blur-sm transition-all"
             >
-              <div className="text-lg font-semibold text-seridian-400">{stat.value}</div>
+              <div className="font-display text-lg font-semibold text-seridian-400">{stat.value}</div>
               <div className="mt-1 text-sm text-slate-500">{stat.label}</div>
             </div>
           ))}

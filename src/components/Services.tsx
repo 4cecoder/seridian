@@ -58,10 +58,10 @@ export function Services() {
     <section id="services" className="border-t border-white/5 bg-slate-925 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-medium uppercase tracking-wider text-seridian-400">
+          <p className="font-mono text-sm font-medium uppercase tracking-wider text-seridian-400">
             Services
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+          <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
             End-to-end technical consulting
           </h2>
           <p className="mt-4 text-slate-400">
@@ -79,7 +79,7 @@ export function Services() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-seridian-500/10 text-seridian-400 transition-colors group-hover:bg-seridian-500/20">
                 {service.icon}
               </div>
-              <h3 className="mt-6 text-xl font-semibold text-white">{service.title}</h3>
+              <h3 className="font-display mt-6 text-xl font-semibold text-white">{service.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-400">
                 {service.description}
               </p>

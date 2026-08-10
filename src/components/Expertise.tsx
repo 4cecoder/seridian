@@ -30,10 +30,10 @@ export function Expertise() {
     <section id="expertise" className="border-t border-white/5 bg-slate-925 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-medium uppercase tracking-wider text-seridian-400">
+          <p className="font-mono text-sm font-medium uppercase tracking-wider text-seridian-400">
             Expertise
           </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+          <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
             Technology we work with
           </h2>
           <p className="mt-4 text-slate-400">
@@ -48,14 +48,14 @@ export function Expertise() {
               key={group.category}
               className="card-glow rounded-xl border border-white/5 bg-slate-850/30 p-6"
             >
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-seridian-400">
+              <h3 className="font-mono text-sm font-semibold uppercase tracking-wider text-seridian-400">
                 {group.category}
               </h3>
               <div className="mt-4 flex flex-wrap gap-2">
                 {group.items.map((item) => (
                   <span
                     key={item}
-                    className="rounded-md border border-white/5 bg-white/5 px-3 py-1.5 text-sm text-slate-300"
+                    className="rounded-md border border-white/5 bg-white/5 px-3 py-1.5 font-mono text-sm text-slate-300"
                   >
                     {item}
                   </span>

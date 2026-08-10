@@ -4,6 +4,8 @@
 
 Project: **Seridian Site Refresh** (team `SER`, tracks `track:ui-kit` / `track:webgl` / `track:fonts` / `track:workflow`).
 
+Everything here applies to the **server-side contact form → Linear** endpoint too (`POST /api/contact`, `src/lib/linear.ts`) — see §2 and `docs/FORMS_LINEAR.md`.
+
 ---
 
 ## 1. Official Linear MCP only
@@ -53,7 +55,37 @@ Prefer OAuth — PAT is fallback only. Do **not** use community `linear-mcp` unl
 
 ---
 
-## 2. Create flow (AI or human)
+## 2. Contact form → Linear (server-side)
+
+The site's contact form creates a real Linear issue via a server-side API key — no MCP/OAuth needed at runtime.
+
+```
+src/components/Contact.tsx  →  POST /api/contact  →  createLinearIssue()  →  issueCreate mutation
+      (client, "use client")    Next App Router route    src/lib/linear.ts      api.linear.app/graphql
+```
+
+- **Endpoint:** `src/app/api/contact/route.ts` (`export const runtime = "nodejs"`). Validates + sanitizes `{ name, email, message }` (rejects empty/oversized/invalid payloads with `400`), rate-limits 5/min per IP (`429`), then calls `createLinearIssue`. Returns `201 { ok: true, identifier }` on success (e.g. `SER-12`), `500` if Linear isn't configured, `502` if Linear fails. Never logs or returns the API key.
+- **Helper:** `src/lib/linear.ts` — `createLinearIssue({ title, description, teamId, labels? })` POSTs an `issueCreate` mutation to `https://api.linear.app/graphql` with the official REST-style header `Authorization: <api key>` (Linear GraphQL accepts the raw key). Reads `LINEAR_API_KEY` from `process.env` **at request time only**, so it never crashes a build. Returns a typed `{ ok: true, identifier } | { ok: false, error }`. No new npm deps — global `fetch`.
+- **Client:** `src/components/Contact.tsx` shows loading, inline validation, honeypot, and the created Linear identifier on success.
+
+### Getting a Linear API key
+
+1. Open https://linear.app/settings/api
+2. Create a **Personal API key** (e.g. `lin_api_...`). Scope it to the `SER` workspace team that owns these issues.
+3. Add it to `.env.local` (never commit it — `.env*` is gitignored).
+
+### Required env vars (read at request time)
+
+| Variable | Purpose |
+|----------|---------|
+| `LINEAR_API_KEY` | Personal API key for `api.linear.app/graphql`. Missing → form returns `500`. |
+| `LINEAR_TEAM_ID` | Team identifier for created issues (e.g. `SER`, from `https://linear.app/<workspace>/team/<TEAM_ID>`). Missing → form returns `500`. |
+
+Copy `.env.example` → `.env.local` to configure locally. Full API contract and curl tests: `docs/FORMS_LINEAR.md`.
+
+---
+
+## 3. Create flow (AI or human)
 
 ### Step 1 — Linear (official MCP)
 
@@ -165,7 +197,7 @@ The updated `PULL_REQUEST_TEMPLATE.md` has dedicated fields for Linear issue, Gi
 
 ---
 
-## 3. Issue templates & labels
+## 4. Issue templates & labels
 
 - `.github/ISSUE_TEMPLATE/bug.yml` — bug report (requires Linear link, track, worktree)
 - `.github/ISSUE_TEMPLATE/feature.yml` — feature (same)
@@ -176,7 +208,7 @@ The updated `PULL_REQUEST_TEMPLATE.md` has dedicated fields for Linear issue, Gi
 
 ---
 
-## 4. Using the linear skill in opencode
+## 5. Using the linear skill in opencode
 
 From any worktree:
 
@@ -192,7 +224,7 @@ If opencode doesn't show the `linear` tools, restart it after editing `opencode.
 
 ---
 
-## 5. Troubleshooting
+## 6. Troubleshooting
 
 - **OAuth `invalid_redirect_uri`** — don't add trailing slash to callback; retry auth.
 - **No tools listed** — restart opencode, check `npx -y mcp-remote https://mcp.linear.app/sse` reaches network.
@@ -201,7 +233,7 @@ If opencode doesn't show the `linear` tools, restart it after editing `opencode.
 
 ---
 
-## 6. References
+## 7. References
 
 - Skill: `/Users/fource/.config/opencode/skills/linear/SKILL.md`
 - UI kit: `/Users/fource/bytecats/ui-kit/README.md`

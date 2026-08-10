@@ -1,44 +1,56 @@
 # feat(ui): consume @bytecats/ui-kit (Astryx+shadcn+MagicUI) with Seridian overrides
 
 ## Summary
-Replace manual shadcn scaffolding with the shared **@bytecats/ui-kit** design system (Astryx tokens + shadcn/ui primitives + Magic UI animations) via `bun` file linkage. Seridian cyan `#06b6d4` on dark `#070b14` brand is preserved by overriding Astryx accent tokens while keeping the full Astryx structure (light-dark, data-ui-theme, radius/typography/shadows). Five sections refactored to use ui-kit primitives; `src/lib/utils.ts` now re-exports `cn` from the kit; `styles.css` is imported once at the app root.
+Replace manual shadcn scaffolding with the shared **@bytecats/ui-kit** design system (Astryx tokens + shadcn/ui primitives + Magic UI animations) via a **vendored** `bun` file linkage (`file:./vendor/ui-kit`). Seridian cyan `#06b6d4` on dark `#070b14` brand is preserved by overriding Astryx accent tokens while keeping the full Astryx structure (light-dark, data-ui-theme, radius/typography/shadows). Five sections refactored to use ui-kit primitives; `src/lib/utils.ts` now re-exports `cn` from the kit; `styles.css` is imported once at the app root and `<Toaster position="top-right" richColors />` is mounted in the root layout.
 
 Branch: `feature/ui-kit` (from `main` @ 30b9939). Stack: bun-only, Next.js 15, Tailwind v4 (no npm).
 
-## Installation — bun-only proof
+## Links (required — tandem workflow)
 
-**Command used (no npm):**
-```bash
-bun add "file:/Users/fource/bytecats/ui-kit" --cwd /tmp/wt-shadcn
-# also verified as: bun add file:/Users/fource/bytecats/ui-kit --cwd /tmp/wt-shadcn
-```
+| Field | Value |
+|-------|-------|
+| **Linear issue** | `Linear: SER-` — https://linear.app/seridian/issue/SER- (track `track:ui-kit`) |
+| **GitHub issue** | `Fixes #` — fork issues disabled; track mirrored as `track:ui-kit` |
+| **Worktree** | `/tmp/wt-shadcn` — branch `feature/ui-kit` |
+| **Linear project** | `Seridian Site Refresh` (team SER) |
+
+## Track
+- [x] track:ui-kit (@bytecats/ui-kit + Astryx tokens — see docs/UI_KIT.md)
+
+## Installation — vendored ui-kit (bun-only, CI/Netlify-safe)
+
+The kit is **vendored into the repo** at `vendor/ui-kit/` so GitHub Actions and Netlify can resolve it without an absolute local `file:` path (the original absolute-path `@bytecats/ui-kit` did NOT exist on CI and broke builds). `vendor/ui-kit/` ships the pre-built `dist/` (no build step) plus a cleaned `package.json` (exports map for both `@bytecats/ui-kit` and `@bytecats/ui-kit/styles.css`, `dependencies` retained since tsup externalizes them, `prepare`/`devDependencies` removed).
 
 **package.json** now contains:
 ```json
 "dependencies": {
-  "@bytecats/ui-kit": "file:/Users/fource/bytecats/ui-kit",
+  "@bytecats/ui-kit": "file:./vendor/ui-kit",
   "next": "^15.4.6",
   "react": "^19.1.1",
   "react-dom": "^19.1.1"
 }
 ```
 
-**bun.lock** entry:
+**bun.lock** entry (resolved via relative path):
 ```
-"@bytecats/ui-kit": "file:/Users/fource/bytecats/ui-kit",
-"@bytecats/ui-kit": ["@bytecats/ui-kit@file:../../../Users/fource/bytecats/ui-kit", { "dependencies": { "canvas-confetti": "^1.9.4", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "cmdk": "^1.1.1", ... } }]
+"@bytecats/ui-kit": "file:vendor/ui-kit",
+"@bytecats/ui-kit@vendor/ui-kit"
 ```
 
-**dist exists (pre-built, committed as per ui-kit README):**
+**Vendored dist exists (pre-built, committed):**
 ```
--rw-r--r-- 100610 /Users/fource/bytecats/ui-kit/dist/styles.css
--rw-r--r-- 121947 /Users/fource/bytecats/ui-kit/dist/index.cjs
--rw-r--r-- 106408 /Users/fource/bytecats/ui-kit/dist/index.js
--rw-r--r--  27216 /Users/fource/bytecats/ui-kit/dist/index.d.ts
+vendor/ui-kit/
+├── LICENSE
+├── package.json      # name @bytecats/ui-kit, exports "./styles.css" → ./dist/styles.css
+└── dist/
+    ├── index.cjs
+    ├── index.d.ts
+    ├── index.js
+    └── styles.css
 ```
-`dist/` is committed so `bun add file:` works without a build step (kit README explains `prepare` is blocked by bun untrusted).
+`dist/` is committed so `bun install` works without a build step, and `@bytecats/ui-kit/styles.css` resolves via the `exports` map.
 
-No `npm` was used; `packageManager: bun@1.4.0` enforced.
+No `npm` was used; `packageManager: bun@1.4.0` enforced. A repo-wide `git grep` for absolute `file:` dependency paths is clean.
 
 ## Theming
 
@@ -109,17 +121,17 @@ Other files unchanged: `Footer.tsx` (no primitives needed), `page.tsx` (composit
 
 ## Verification
 
-All bun-only, Tailwind v4, no npm:
+All bun-only, Tailwind v4, no npm. Re-run after vendoring (2026-08-10):
 
 ```
-$ bun install --cwd /tmp/wt-shadcn
+$ bun install --frozen-lockfile
 bun install v1.4.0-canary.1 (ae4b17de6)
 
-+ @bytecats/ui-kit@../../../Users/fource/bytecats/ui-kit
++ @bytecats/ui-kit@vendor/ui-kit
 
-1 package installed [3.72s]
+1 package installed [102.00ms]
 
-$ bun run --cwd /tmp/wt-shadcn lint
+$ bun run lint
 $ next lint
 `next lint` is deprecated and will be removed in Next.js 16.
 For new projects, use create-next-app to choose your preferred linter.
@@ -128,42 +140,43 @@ npx @next/codemod@canary next-lint-to-eslint-cli .
 
 ✔ No ESLint warnings or errors
 
-$ /tmp/wt-shadcn/node_modules/.bin/tsc --noEmit --project /tmp/wt-shadcn/tsconfig.json
+$ bunx tsc --noEmit
 (tsc exit:0 — no output, types clean)
 
-$ bun run --cwd /tmp/wt-shadcn build
+$ bun run build
 $ next build
    ▲ Next.js 15.5.23
 
    Creating an optimized production build ...
- ✓ Compiled successfully in 3.7s
+ ✓ Compiled successfully in 15.5s
    Linting and checking validity of types ...
    Collecting page data ...
    Generating static pages (0/5) ...
-   Generating static pages (1/5) 
-   Generating static pages (2/5) 
-   Generating static pages (3/5) 
+   Generating static pages (1/5)
+   Generating static pages (2/5)
+   Generating static pages (3/5)
  ✓ Generating static pages (5/5)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                                 Size  First Load JS
-┌ ○ /                                      162 B         260 kB
+┌ ○ /                                      159 B         254 kB
 ├ ○ /_not-found                            995 B         104 kB
 └ ○ /icon                                  123 B         103 kB
 + First Load JS shared by all             103 kB
   ├ chunks/255-87552e6e05b8e3aa.js       46.4 kB
   ├ chunks/4bd1b696-c023c6e3521b1417.js  54.2 kB
-  └ other shared chunks (total)          1.91 kB
+  └ other shared chunks (total)          1.92 kB
 
 ○  (Static)  prerendered as static content
 ```
 
-All four pass: `bun install`, `lint`, `tsc --noEmit`, `build`. Bundle: ~103kB shared First Load JS (expected for Next 15 + ui-kit deps). No TypeScript errors.
+All four pass: `bun install --frozen-lockfile`, `lint`, `tsc --noEmit`, `build`. Route `/` is static. Bundle: ~103kB shared First Load JS (expected for Next 15 + ui-kit deps). No TypeScript errors. No absolute local dependency paths remain.
 
 ## Files Changed
-- `package.json` + `bun.lock` — add `@bytecats/ui-kit` file linkage
-- `src/app/layout.tsx` — import `@bytecats/ui-kit/styles.css` before globals, body `bg-background text-foreground`
+- `vendor/ui-kit/` — **new**, vendored @bytecats/ui-kit (package.json + dist/ + LICENSE) so CI/Netlify resolve it without absolute paths
+- `package.json` + `bun.lock` — `@bytecats/ui-kit` → `file:./vendor/ui-kit` (relative, CI-safe)
+- `src/app/layout.tsx` — import `@bytecats/ui-kit/styles.css` before globals, body `bg-background text-foreground`, mount `<Toaster position="top-right" richColors />`
 - `src/app/globals.css` — thinned to Seridian palette + `:root` Astryx→Seridian cyan overrides + preserved utilities
 - `src/lib/utils.ts` — **new**, re-exports `cn` from kit
 - `src/components/Header.tsx` — Button/Badge
@@ -175,8 +188,9 @@ All four pass: `bun install`, `lint`, `tsc --noEmit`, `build`. Bundle: ~103kB sh
 - `PR_UI_KIT.md` — this doc
 
 ## Constraints Met
-- ✅ bun-only (`bun add file:`, `bun.lock`, `packageManager bun@1.4.0`, no npm)
+- ✅ bun-only (`bun install --frozen-lockfile`, `bun.lock`, `packageManager bun@1.4.0`, no npm)
 - ✅ Tailwind v4 (kit ships compiled `dist/styles.css`; consumer needs no Tailwind preset)
 - ✅ Import `styles.css` once at root
 - ✅ Seridian cyan `#06b6d4` on dark `#070b14` preserved inside Astryx token system
+- ✅ Vendored dependency resolves on CI/Netlify (`file:./vendor/ui-kit`, relative path only)
 - ✅ No `npm` usage

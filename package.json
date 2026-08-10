@@ -13,7 +13,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@bytecats/ui-kit": "file:/Users/fource/bytecats/ui-kit",
+    "@bytecats/ui-kit": "file:./vendor/ui-kit",
     "next": "^15.4.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"

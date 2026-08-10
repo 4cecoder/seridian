@@ -17,18 +17,14 @@
   --color-slate-950: #070b14;
 }
 
-/* Tailwind v4 theme wiring — maps next/font CSS variables to Tailwind utilities
- * --font-sans  -> font-sans  (Inter, body copy)
- * --font-display -> font-display (Space Grotesk, headings)
- * --font-mono  -> font-mono  (JetBrains Mono, code/tech tags)
- * Astryx-compatible vars are preserved: --font-sans / --font-heading / --font-mono
- * Seridian maps --font-heading to --font-display for direct Astryx token compat.
- */
+/* Tailwind v4 font wiring — next/font variables are set on <html> by layout.tsx.
+ * @theme inline inlines these values into utilities (font-sans/font-display/font-mono).
+ * --font-heading is kept as an Astryx-compatible alias for the display font. */
 @theme inline {
   --font-sans: var(--font-body);
-  --font-display: var(--font-display);
-  --font-mono: var(--font-mono);
-  --font-heading: var(--font-display);
+  --font-display: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-space-grotesk);
 }
 
 html {
@@ -47,11 +43,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Display headings use Space Grotesk; body remains Inter */
+/* Display headings use Space Grotesk (via --font-heading); body remains Inter */
 h1,
 h2,
 h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
 }
 
 ::selection {

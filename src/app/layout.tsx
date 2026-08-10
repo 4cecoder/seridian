@@ -6,10 +6,9 @@ import { Footer } from "@/components/Footer";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-space-grotesk",
   display: "swap",
   preload: true,
-  weight: ["400", "500", "600", "700"],
 });
 
 const inter = Inter({
@@ -21,10 +20,9 @@ const inter = Inter({
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-jetbrains-mono",
   display: "swap",
   preload: true,
-  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {

@@ -1,3 +1,12 @@
+import {
+  Badge,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@bytecats/ui-kit";
+
 const services = [
   {
     icon: (
@@ -58,9 +67,12 @@ export function Services() {
     <section id="services" className="border-t border-white/5 bg-slate-925 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-medium uppercase tracking-wider text-seridian-400">
+          <Badge
+            variant="secondary"
+            className="border-seridian-500/20 bg-seridian-500/10 text-seridian-400 uppercase tracking-wider"
+          >
             Services
-          </p>
+          </Badge>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
             End-to-end technical consulting
           </h2>
@@ -72,34 +84,38 @@ export function Services() {
 
         <div className="mt-16 grid gap-8 lg:grid-cols-3">
           {services.map((service) => (
-            <div
+            <Card
               key={service.title}
-              className="card-glow group rounded-2xl border border-white/5 bg-slate-850/30 p-8 transition-all hover:border-seridian-500/20"
+              className="card-glow group rounded-2xl border-white/5 bg-slate-850/30 p-8 transition-all hover:border-seridian-500/20"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-seridian-500/10 text-seridian-400 transition-colors group-hover:bg-seridian-500/20">
                 {service.icon}
               </div>
-              <h3 className="mt-6 text-xl font-semibold text-white">{service.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                {service.description}
-              </p>
-              <ul className="mt-6 space-y-2.5">
-                {service.items.map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-slate-300">
-                    <svg
-                      className="mt-0.5 h-4 w-4 shrink-0 text-seridian-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <CardHeader className="p-0 pt-6">
+                <CardTitle className="text-xl font-semibold text-white">{service.title}</CardTitle>
+                <CardDescription className="text-sm leading-relaxed text-slate-400">
+                  {service.description}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0 pt-6">
+                <ul className="space-y-2.5">
+                  {service.items.map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-slate-300">
+                      <svg
+                        className="mt-0.5 h-4 w-4 shrink-0 text-seridian-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

@@ -1,3 +1,5 @@
+import { Card, CardContent } from "@bytecats/ui-kit";
+
 const steps = [
   {
     number: "01",
@@ -51,18 +53,18 @@ export function Approach() {
 
           <div className="space-y-6">
             {steps.map((step) => (
-              <div
+              <Card
                 key={step.number}
-                className="card-glow flex gap-5 rounded-xl border border-white/5 bg-slate-850/30 p-6 transition-all"
+                className="card-glow flex flex-row gap-5 rounded-xl border-white/5 bg-slate-850/30 p-6 transition-all"
               >
                 <span className="text-2xl font-bold text-seridian-500/40">{step.number}</span>
-                <div>
+                <CardContent className="p-0">
                   <h3 className="text-lg font-semibold text-white">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-400">
                     {step.description}
                   </p>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>

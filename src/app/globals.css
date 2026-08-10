@@ -19,13 +19,51 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Seridian overrides on top of Astryx (neutral) token system
+   ui-kit ships Astryx via light-dark() + data-ui-theme.
+   We override the primary/accent tokens to Seridian cyan while keeping
+   Astryx structure (radius, typography, shadows, dark-mode via light-dark). */
+:root {
+  /* Primary -> Seridian cyan #06b6d4 */
+  --astryx-color-accent: #06b6d4;
+  --astryx-color-accent-muted: rgba(6, 182, 212, 0.15);
+  --astryx-color-on-accent: #070b14;
+  --astryx-color-ring: #06b6d4;
+
+  /* Map shadcn primary tokens explicitly (ui-kit already maps via @theme inline,
+     but explicit override ensures Seridian cyan even if import order shifts) */
+  --color-primary: var(--astryx-color-accent);
+  --color-primary-foreground: var(--astryx-color-on-accent);
+  --color-ring: var(--astryx-color-accent);
+  --color-accent: var(--astryx-color-accent-muted);
+  --color-accent-foreground: var(--astryx-color-text-primary);
+
+  /* Keep dark surfaces as Seridian dark, light stays Astryx neutral */
+  --astryx-color-background-body: light-dark(#f1f1f1, #070b14);
+  --astryx-color-background-surface: light-dark(#ffffff, #172033);
+  --astryx-color-background-card: light-dark(#ffffff, #0c1222);
+  --astryx-color-background-popover: light-dark(#ffffff, #0c1222);
+  --astryx-color-background-muted: light-dark(#f1f1f1, #172033);
+
+  --astryx-color-text-primary: light-dark(#171717, #e2e8f0);
+  --astryx-color-text-secondary: light-dark(#737373, #94a3b8);
+  --astryx-color-border: light-dark(#ebebeb, rgba(255, 255, 255, 0.05));
+  --astryx-color-border-emphasized: light-dark(#d4d4d4, rgba(255, 255, 255, 0.1));
+  --astryx-color-skeleton: light-dark(#ebebeb, #1e293b);
+
+  /* Ensure --primary (if any tooling expects it) also maps to cyan */
+  --primary: var(--astryx-color-accent);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--color-slate-950);
-  color: #e2e8f0;
+  /* ui-kit sets bg-background/text-foreground via light-dark(); our token overrides above
+     make that resolve to Seridian dark #070b14 / slate-200 in dark mode. */
+  background-color: var(--astryx-color-background-body, var(--color-slate-950));
+  color: var(--astryx-color-text-primary, #e2e8f0);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

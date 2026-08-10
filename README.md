@@ -45,11 +45,16 @@ src/
 - Adjust technology tags in `src/components/Expertise.tsx`
 - Edit site metadata in `src/app/layout.tsx`
 
+## Links
+
+- **Live site:** [https://seridian.netlify.app](https://seridian.netlify.app)
+- **GitHub:** [https://github.com/therodfather/seridian](https://github.com/therodfather/seridian)
+- **Netlify dashboard:** [https://app.netlify.com/projects/seridian](https://app.netlify.com/projects/seridian)
+
 ## Deploy
 
-Deploy to [Vercel](https://vercel.com), [Netlify](https://netlify.com), or any platform that supports Next.js:
+Pushes to `main` automatically deploy via Netlify. To deploy manually from the CLI:
 
 ```bash
-npm run build
-npm start
+npx netlify-cli deploy --prod --build
 ```

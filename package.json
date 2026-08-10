@@ -10,11 +10,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@bytecats/ui-kit": "file:./vendor/ui-kit",
-    "next": "^15.4.6",
+    "next": "^16.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
@@ -25,7 +25,7 @@
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "eslint": "^9.33.0",
-    "eslint-config-next": "^15.4.6",
+    "eslint-config-next": "^16.3.0",
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.2"
   }

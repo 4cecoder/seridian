@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-seridian-50: #ecfeff;
+  --color-seridian-100: #cffafe;
+  --color-seridian-200: #a5f3fc;
+  --color-seridian-300: #67e8f9;
+  --color-seridian-400: #22d3ee;
+  --color-seridian-500: #06b6d4;
+  --color-seridian-600: #0891b2;
+  --color-seridian-700: #0e7490;
+  --color-seridian-800: #155e75;
+  --color-seridian-900: #164e63;
+
+  --color-slate-850: #172033;
+  --color-slate-925: #0c1222;
+  --color-slate-950: #070b14;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-slate-950);
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-seridian-400) 30%, transparent);
+  color: white;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 50%, #67e8f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.glow-orb {
+  background: radial-gradient(
+    circle,
+    rgba(6, 182, 212, 0.15) 0%,
+    rgba(6, 182, 212, 0.05) 40%,
+    transparent 70%
+  );
+}
+
+.card-glow {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+.card-glow:hover {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.2),
+    0 8px 32px rgba(6, 182, 212, 0.1),
+    0 4px 24px rgba(0, 0, 0, 0.4);
+}

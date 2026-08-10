@@ -107,9 +107,19 @@ function createProgram(
   fsSrc: string
 ): WebGLProgram {
   const vs = compile(gl, gl.VERTEX_SHADER, vsSrc);
-  const fs = compile(gl, gl.FRAGMENT_SHADER, fsSrc);
+  let fs: WebGLShader;
+  try {
+    fs = compile(gl, gl.FRAGMENT_SHADER, fsSrc);
+  } catch (err) {
+    gl.deleteShader(vs);
+    throw err;
+  }
   const prog = gl.createProgram();
-  if (!prog) throw new Error("program create failed");
+  if (!prog) {
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    throw new Error("program create failed");
+  }
   gl.attachShader(prog, vs);
   gl.attachShader(prog, fs);
   gl.linkProgram(prog);
@@ -177,6 +187,40 @@ function drawFallback2D(
   }
 }
 
+// 2D fallback wiring shared by the no-webgl2 and shader-error paths.
+// If the canvas already holds a webgl context (shader error), getContext("2d")
+// returns null — swap in a fresh canvas so the fallback can actually render.
+function setupFallback2D(
+  wrap: HTMLElement,
+  canvas: HTMLCanvasElement,
+  mql: MediaQueryList
+): () => void {
+  let target = canvas.getContext("2d") ? canvas : null;
+  if (!target) {
+    target = document.createElement("canvas");
+    for (let i = 0; i < canvas.attributes.length; i++) {
+      const attr = canvas.attributes[i];
+      target.setAttribute(attr.name, attr.value);
+    }
+    canvas.replaceWith(target);
+    target.style.opacity = "1";
+  }
+  let reduced = mql.matches;
+  const draw = () => drawFallback2D(target!, reduced);
+  draw();
+  const ro = new ResizeObserver(draw);
+  ro.observe(wrap);
+  const onChange = (e: MediaQueryListEvent) => {
+    reduced = e.matches;
+    draw();
+  };
+  mql.addEventListener?.("change", onChange);
+  return () => {
+    ro.disconnect();
+    mql.removeEventListener?.("change", onChange);
+  };
+}
+
 export default function WebGLHero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -210,19 +254,7 @@ export default function WebGLHero() {
     }
 
     if (!gl) {
-      drawFallback2D(canvas, reducedMotion);
-      const onResizeFallback = () => drawFallback2D(canvas, reducedMotion);
-      const roFb = new ResizeObserver(onResizeFallback);
-      roFb.observe(wrap);
-      const mqlListener = (e: MediaQueryListEvent) => {
-        reducedMotion = e.matches;
-        drawFallback2D(canvas, reducedMotion);
-      };
-      mql.addEventListener?.("change", mqlListener);
-      return () => {
-        roFb.disconnect();
-        mql.removeEventListener?.("change", mqlListener);
-      };
+      return setupFallback2D(wrap, canvas, mql);
     }
 
     // WebGL path
@@ -232,8 +264,7 @@ export default function WebGLHero() {
     } catch (err) {
       // shader error → fallback
       console.warn("[WebGLHero] shader error, using 2d fallback", err);
-      drawFallback2D(canvas, reducedMotion);
-      return;
+      return setupFallback2D(wrap, canvas, mql);
     }
 
     gl.useProgram(program);
@@ -348,12 +379,10 @@ export default function WebGLHero() {
       mql.removeEventListener?.("change", onReduceChange);
       window.removeEventListener("resize", resize);
       if (ro) ro.disconnect();
-      gl?.deleteProgram(program!);
+      if (program) gl?.deleteProgram(program);
       if (posBuf) gl?.deleteBuffer(posBuf);
-      // lose context explicitly if available
-      const lose = gl?.getExtension("WEBGL_lose_context");
-      // don't force lose immediately; let GC handle
-      void lose;
+      // release GPU context explicitly on unmount
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
     };
   }, []);
 

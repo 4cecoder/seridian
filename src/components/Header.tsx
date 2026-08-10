@@ -20,7 +20,7 @@ export function Header() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-seridian-400 to-seridian-600">
             <span className="text-sm font-bold text-slate-950">S</span>
           </div>
-          <span className="text-lg font-semibold tracking-tight text-white">
+          <span className="font-display text-lg font-semibold tracking-tight text-white">
             Seridian
           </span>
           <Badge

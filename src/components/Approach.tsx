@@ -33,10 +33,10 @@ export function Approach() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid items-start gap-16 lg:grid-cols-2">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wider text-seridian-400">
+            <p className="font-mono text-sm font-medium uppercase tracking-wider text-seridian-400">
               Our Approach
             </p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+            <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
               Practical consulting, not slide decks
             </h2>
             <p className="mt-4 leading-relaxed text-slate-400">
@@ -57,9 +57,9 @@ export function Approach() {
                 key={step.number}
                 className="card-glow flex flex-row gap-5 rounded-xl border-white/5 bg-slate-850/30 p-6 transition-all"
               >
-                <span className="text-2xl font-bold text-seridian-500/40">{step.number}</span>
+                <span className="font-mono text-2xl font-bold text-seridian-500/40">{step.number}</span>
                 <CardContent className="p-0">
-                  <h3 className="text-lg font-semibold text-white">{step.title}</h3>
+                  <h3 className="font-display text-lg font-semibold text-white">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-slate-400">
                     {step.description}
                   </p>

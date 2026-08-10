@@ -18,10 +18,10 @@ export function Contact() {
 
           <CardContent className="relative grid gap-12 p-8 md:p-16 lg:grid-cols-2">
             <div>
-              <p className="text-sm font-medium uppercase tracking-wider text-seridian-400">
+              <p className="font-mono text-sm font-medium uppercase tracking-wider text-seridian-400">
                 Contact
               </p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+              <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
                 Let&apos;s talk about your next project
               </h2>
               <p className="mt-4 leading-relaxed text-slate-400">

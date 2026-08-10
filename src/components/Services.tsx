@@ -73,7 +73,7 @@ export function Services() {
           >
             Services
           </Badge>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+          <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
             End-to-end technical consulting
           </h2>
           <p className="mt-4 text-slate-400">
@@ -92,7 +92,7 @@ export function Services() {
                 {service.icon}
               </div>
               <CardHeader className="p-0 pt-6">
-                <CardTitle className="text-xl font-semibold text-white">{service.title}</CardTitle>
+                <CardTitle className="font-display text-xl font-semibold text-white">{service.title}</CardTitle>
                 <CardDescription className="text-sm leading-relaxed text-slate-400">
                   {service.description}
                 </CardDescription>

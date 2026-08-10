@@ -38,7 +38,7 @@ export function Expertise() {
           >
             Expertise
           </Badge>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+          <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
             Technology we work with
           </h2>
           <p className="mt-4 text-slate-400">
@@ -54,7 +54,7 @@ export function Expertise() {
               className="card-glow rounded-xl border-white/5 bg-slate-850/30 p-6"
             >
               <CardHeader className="p-0">
-                <CardTitle className="text-sm font-semibold uppercase tracking-wider text-seridian-400">
+                <CardTitle className="font-mono text-sm font-semibold uppercase tracking-wider text-seridian-400">
                   {group.category}
                 </CardTitle>
               </CardHeader>
@@ -64,7 +64,7 @@ export function Expertise() {
                     <Badge
                       key={item}
                       variant="secondary"
-                      className="rounded-md border-white/5 bg-white/5 px-3 py-1.5 text-sm font-normal text-slate-300 hover:bg-white/10"
+                      className="rounded-md border-white/5 bg-white/5 px-3 py-1.5 font-mono text-sm text-slate-300 hover:bg-white/10"
                     >
                       {item}
                     </Badge>

@@ -10,7 +10,7 @@ Branch: `feature/ui-kit` (from `main` @ 30b9939). Stack: bun-only, Next.js 15, T
 | Field | Value |
 |-------|-------|
 | **Linear issue** | `Linear: SER-` — https://linear.app/seridian/issue/SER- (track `track:ui-kit`) |
-| **GitHub issue** | `Fixes #` — fork issues disabled; track mirrored as `track:ui-kit` |
+| **GitHub issue** | `Fixes 4cecoder/seridian#4` — track:ui-kit mirror, created 2026-08-10 |
 | **Worktree** | `/tmp/wt-shadcn` — branch `feature/ui-kit` |
 | **Linear project** | `Seridian Site Refresh` (team SER) |
 

@@ -1,0 +1,26 @@
+name: Visual Preview
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  comment-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview
+          message: |
+            ### ✨ Preview
+            - **Netlify Deploy Preview** will appear in the checks below (powered by `netlify.toml`).
+            - **Local preview:** `npm ci && npm run dev` → http://localhost:3000
+            - **Review checklist:**
+              - [ ] shadcn components render with correct theme
+              - [ ] WebGL hero does not regress LCP / CLS
+              - [ ] Custom fonts load with `font-display: swap`
+

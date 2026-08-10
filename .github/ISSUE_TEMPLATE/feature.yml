@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Tandem workflow:** `linear_create_issue` (official MCP `https://mcp.linear.app/sse`) → `gh issue create` with `Linear: SER-X` in body. See `docs/LINEAR_GITHUB_WORKFLOW.md`.
+        **Tandem workflow:** `linear_create_issue` (official MCP `https://mcp.linear.app/mcp`) → `gh issue create` with `Linear: SER-X` in body. See `docs/LINEAR_GITHUB_WORKFLOW.md`.
   - type: input
     id: linear
     attributes:

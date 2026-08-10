@@ -53,9 +53,9 @@ jobs:
                 `- **GitHub:** Fixes #${issue.number} (add \`Fixes #${issue.number}\` to your PR body)`,
                 `- **Track:** \`${trackLabel}\`  •  **Worktree:** \`git worktree add /tmp/wt-<slug> -b feature/<slug> main\``,
                 ``,
-                `> **Workflow:** Create Linear issue via official MCP (\`linear_create_issue\` on \`https://mcp.linear.app/sse\` via \`mcp-remote\`), mirror with \`gh issue create --label ${trackLabel} --body \"Linear: ${linearRef}\"\`. PR must contain \`Linear: ${linearRef}\` and \`Fixes #${issue.number}\`. CI is bun-only (\`bun install --frozen-lockfile\`, \`bun run lint\`, \`bunx tsc --noEmit\`, \`bun run build\`).`,
+                `> **Workflow:** Create Linear issue via official MCP (\`linear_create_issue\` on \`https://mcp.linear.app/mcp\` via \`mcp-remote\`), mirror with \`gh issue create --label ${trackLabel} --body \"Linear: ${linearRef}\"\`. PR must contain \`Linear: ${linearRef}\` and \`Fixes #${issue.number}\`. CI is bun-only (\`bun install --frozen-lockfile\`, \`bun run lint\`, \`bunx tsc --noEmit\`, \`bun run build\`).`,
                 ``,
-                `<!-- linear-sync: SER-X bot — uses gh cli + linear MCP notes; official MCP only https://mcp.linear.app/sse, fallback PAT LINEAR_API_KEY if OAuth blocked -->`,
+                `<!-- linear-sync: SER-X bot — uses gh cli + linear MCP notes; official MCP only https://mcp.linear.app/mcp, fallback PAT LINEAR_API_KEY if OAuth blocked -->`,
               ].join("\n"),
             });
 

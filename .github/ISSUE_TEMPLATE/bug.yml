@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        **Tandem:** Create a Linear issue first (`linear_create_issue` via official MCP `https://mcp.linear.app/sse`), then mirror here. This issue must link to `Linear: SER-X`.
+        **Tandem:** Create a Linear issue first (`linear_create_issue` via official MCP `https://mcp.linear.app/mcp`), then mirror here. This issue must link to `Linear: SER-X`.
   - type: input
     id: linear
     attributes:

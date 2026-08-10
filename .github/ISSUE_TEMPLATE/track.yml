@@ -24,7 +24,7 @@ body:
     id: linear
     attributes:
       label: Linear issue link
-      description: Official Linear issue via MCP https://mcp.linear.app/sse — format Linear: SER-X + URL
+      description: Official Linear issue via MCP https://mcp.linear.app/mcp — format Linear: SER-X + URL
       placeholder: "Linear: SER-4 — https://linear.app/seridian/issue/SER-4"
     validations:
       required: true

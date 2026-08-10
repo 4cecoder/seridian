@@ -10,7 +10,7 @@
 | **Worktree** | ` ` <!-- e.g. /tmp/wt-linear — branch feature/linear-sync (git worktree add ...) --> |
 | **Linear project** | `Seridian Site Refresh` (team SER) |
 
-> PR body **must** contain `Linear: SER-X` and `Fixes #Y` as plain text (CI and `linear-sync.yml` parse it). See `docs/LINEAR_GITHUB_WORKFLOW.md` for how to create the Linear issue via official MCP `https://mcp.linear.app/sse` (`linear_create_issue`) and mirror with `gh issue create`.
+> PR body **must** contain `Linear: SER-X` and `Fixes #Y` as plain text (CI and `linear-sync.yml` parse it). See `docs/LINEAR_GITHUB_WORKFLOW.md` for how to create the Linear issue via official MCP `https://mcp.linear.app/mcp` (`linear_create_issue`) and mirror with `gh issue create`.
 
 ## Track
 <!-- Check one — must match Linear label + GitHub label track:* -->
@@ -24,7 +24,7 @@
 
 ## Checklist (bun only — do not use npm/yarn/pnpm)
 - [ ] `bun run lint` passes
-- [ ] `bun x tsc --noEmit` passes (`bunx tsc --noEmit` also okay)
+- [ ] `bunx tsc --noEmit` passes
 - [ ] `bun run build` succeeds
 - [ ] `bun install --frozen-lockfile` is clean (no `package-lock.json` drift)
 - [ ] No layout shift (CLS) regressions
@@ -36,4 +36,4 @@
 ## Preview
 Netlify will post a Deploy Preview link. Also test locally: `bun install && bun run build && bun run start`.
 
-> **Enforced:** This repo uses **bun only**. CI runs `oven-sh/setup-bun@v2` and `bun install --frozen-lockfile`. Do not commit `package-lock.json` or use `npm ci`. Official Linear MCP only: `https://mcp.linear.app/sse` via `mcp-remote` (OAuth); fallback PAT `LINEAR_API_KEY` only if OAuth blocked — see `docs/LINEAR_GITHUB_WORKFLOW.md` and the linear skill at `~/.config/opencode/skills/linear/SKILL.md`.
+> **Enforced:** This repo uses **bun only**. CI runs `oven-sh/setup-bun@v2` and `bun install --frozen-lockfile`. Do not commit `package-lock.json` or use `npm ci`. Official Linear MCP only: `https://mcp.linear.app/mcp` via `mcp-remote` (OAuth); fallback PAT `LINEAR_API_KEY` only if OAuth blocked — see `docs/LINEAR_GITHUB_WORKFLOW.md` and the linear skill at `~/.config/opencode/skills/linear/SKILL.md`.

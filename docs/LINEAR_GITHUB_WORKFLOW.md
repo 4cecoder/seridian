@@ -13,7 +13,7 @@ Everything here applies to the **server-side contact form → Linear** endpoint 
 This repo uses **only** the official Linear MCP server:
 
 ```
-https://mcp.linear.app/sse  via mcp-remote
+https://mcp.linear.app/mcp  via mcp-remote
 ```
 
 `mcp-remote` command (from the linear skill at `~/.config/opencode/skills/linear/SKILL.md`):
@@ -23,7 +23,7 @@ https://mcp.linear.app/sse  via mcp-remote
   "mcp": {
     "linear": {
       "type": "local",
-      "command": ["npx", "-y", "mcp-remote", "https://mcp.linear.app/sse"],
+      "command": ["npx", "-y", "mcp-remote", "https://mcp.linear.app/mcp"],
       "enabled": true
     }
   }
@@ -31,9 +31,9 @@ https://mcp.linear.app/sse  via mcp-remote
 ```
 
 - No `LINEAR_API_KEY` needed — auth is **browser OAuth** on first tool use. `mcp-remote` opens a browser, you approve workspace **Seridian**.
-- For Claude Code equivalent: `claude mcp add --transport sse linear-server https://mcp.linear.app/sse`
+- For Claude Code equivalent: `claude mcp add --transport http linear-server https://mcp.linear.app/mcp`
 - Spec: `2025-03-26`. Source: https://linear.app/changelog/2025-05-01-mcp
-- Verify: `npx -y mcp-remote https://mcp.linear.app/sse --help` and check opencode logs show `linear` connected with tools `create_issue`, `update_issue`, `list_issues`, etc.
+- Verify: `bunx -y mcp-remote https://mcp.linear.app/mcp --help` and check opencode logs show `linear` connected with tools `create_issue`, `update_issue`, `list_issues`, etc.
 
 ### Fallback PAT (only if OAuth blocked)
 
@@ -44,7 +44,7 @@ If behind a firewall that blocks OAuth, temporarily add a second local server:
   "mcp": {
     "linear-pat": {
       "type": "local",
-      "command": ["npx", "-y", "linear-mcp"],
+      "command": ["bunx", "-y", "linear-mcp"],
       "env": { "LINEAR_API_KEY": "lin_api_..." }
     }
   }
@@ -220,14 +220,14 @@ use linear skill — update SER-5 to In Review
 
 The linear skill (`~/.config/opencode/skills/linear/SKILL.md`) wires the OAuth flow and documents `linear_create_issue`, `linear_update_issue`, `linear_list_issues`, `linear_create_comment`, `linear_list_projects`.
 
-If opencode doesn't show the `linear` tools, restart it after editing `opencode.json` and verify network reaches `https://mcp.linear.app/sse`.
+If opencode doesn't show the `linear` tools, restart it after editing `opencode.json` and verify network reaches `https://mcp.linear.app/mcp`.
 
 ---
 
 ## 6. Troubleshooting
 
 - **OAuth `invalid_redirect_uri`** — don't add trailing slash to callback; retry auth.
-- **No tools listed** — restart opencode, check `npx -y mcp-remote https://mcp.linear.app/sse` reaches network.
+- **No tools listed** — restart opencode, check `bunx -y mcp-remote https://mcp.linear.app/mcp` reaches network.
 - **Want PAT fallback** — see §1; set `LINEAR_API_KEY=lin_api_...` and add `linear-pat` server.
 - **Bun-only enforcement** — CI fails if `package-lock.json` appears; never run `npm install`.
 

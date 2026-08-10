@@ -16,11 +16,10 @@ jobs:
         with:
           header: preview
           message: |
-            ### ✨ Preview
-            - **Netlify Deploy Preview** will appear in the checks below (powered by `netlify.toml`).
-            - **Local preview:** `npm ci && npm run dev` → http://localhost:3000
+            ### ✨ Preview (bun)
+            - **Netlify Deploy Preview** will appear in the checks below (powered by `netlify.toml` — now uses `bun`).
+            - **Local preview:** `bun install && bun run dev` → http://localhost:3000
             - **Review checklist:**
               - [ ] shadcn components render with correct theme
-              - [ ] WebGL hero does not regress LCP / CLS
+              - [ ] WebGL hero does not regress LCP / CLS (check `prefers-reduced-motion`)
               - [ ] Custom fonts load with `font-display: swap`
-

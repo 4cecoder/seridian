@@ -75,30 +75,30 @@ export function PipelineBoard({ onDealClick, onAddDeal }: PipelineBoardProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Sales Pipeline</h2>
           <p className="text-sm text-slate-500">
             {deals === undefined
               ? "Loading..."
-              : `${deals.length} deal${deals.length !== 1 ? "s" : ""} · ${formatCurrency(totalPipeline)} total`}
+              : `${deals.length} deal${deals.length !== 1 ? "s" : ""} \u00B7 ${formatCurrency(totalPipeline)} total`}
           </p>
         </div>
         {onAddDeal && (
-          <Button type="button" size="sm" onClick={onAddDeal}>
+          <Button type="button" size="sm" onClick={onAddDeal} className="self-start">
             + Add Deal
           </Button>
         )}
       </div>
 
-      <div className="flex h-[calc(100vh-12rem)] gap-4 overflow-x-auto pb-4">
+      <div className="flex h-[calc(100vh-14rem)] sm:h-[calc(100vh-12rem)] gap-3 sm:gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
         {columns.map((column) => {
           const columnDeals = dealsByStage(column.key);
 
           return (
             <div
               key={column.key}
-              className="flex w-[280px] min-w-[280px] flex-col"
+              className="flex w-[260px] min-w-[260px] sm:w-[280px] sm:min-w-[280px] flex-col"
             >
               <div
                 className={cn(

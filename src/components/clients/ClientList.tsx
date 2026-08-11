@@ -37,9 +37,12 @@ function ClientRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h4 className="truncate text-sm font-medium text-slate-200 group-hover:text-white">
+          <a
+            href={`/dashboard/clients/${client._id}`}
+            className="truncate text-sm font-medium text-slate-200 hover:text-white transition-colors"
+          >
             {client.name}
-          </h4>
+          </a>
           <Badge
             variant={client.status === "active" ? "default" : "secondary"}
             className={cn(
@@ -106,7 +109,7 @@ export function ClientList({ onEdit, onAdd }: ClientListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Clients</h2>
           <p className="text-sm text-slate-500">
@@ -115,7 +118,7 @@ export function ClientList({ onEdit, onAdd }: ClientListProps) {
               : `${clients.length} client${clients.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Button type="button" size="sm" onClick={onAdd}>
+        <Button type="button" size="sm" onClick={onAdd} className="self-start">
           + Add Client
         </Button>
       </div>

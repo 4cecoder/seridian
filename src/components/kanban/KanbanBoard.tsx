@@ -71,14 +71,14 @@ export function KanbanBoard({ onIssueClick }: KanbanBoardProps) {
   }, [issues]);
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] gap-4 overflow-x-auto pb-4">
+    <div className="flex h-[calc(100vh-14rem)] sm:h-[calc(100vh-12rem)] gap-3 sm:gap-4 overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
       {COLUMNS.map((column) => {
         const columnIssues = issuesByStatus[column.key] ?? [];
 
         return (
           <div
             key={column.key}
-            className="flex w-[280px] min-w-[280px] flex-col"
+            className="flex w-[260px] min-w-[260px] sm:w-[280px] sm:min-w-[280px] flex-col"
           >
             <div
               className={cn(

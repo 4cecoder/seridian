@@ -133,14 +133,14 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Bookings</h2>
           <p className="text-sm text-slate-500">
             {bookings === undefined ? "Loading..." : `${bookings.length} booking${bookings.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Button type="button" size="sm" onClick={() => onDayClick?.(today)}>
+        <Button type="button" size="sm" onClick={() => onDayClick?.(today)} className="self-start">
           + New Booking
         </Button>
       </div>
@@ -158,8 +158,9 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
 
         <div className="grid grid-cols-7 gap-px">
           {WEEKDAYS.map((d) => (
-            <div key={d} className="py-2 text-center text-[11px] font-medium text-slate-500 uppercase">
-              {d}
+            <div key={d} className="py-1.5 sm:py-2 text-center text-[10px] sm:text-[11px] font-medium text-slate-500 uppercase">
+              <span className="hidden sm:inline">{d}</span>
+              <span className="sm:hidden">{d.charAt(0)}</span>
             </div>
           ))}
 
@@ -176,7 +177,7 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
                 type="button"
                 onClick={() => handleDayClick(dateStr)}
                 className={cn(
-                  "relative flex h-24 flex-col items-start p-1.5 text-left transition-colors rounded-md",
+                  "relative flex h-16 sm:h-24 flex-col items-start p-1 sm:p-1.5 text-left transition-colors rounded-md min-h-[44px]",
                   isCurrentMonth ? "text-slate-300" : "text-slate-700",
                   "hover:bg-white/[0.03]",
                   isSelected && "bg-seridian-500/10 ring-1 ring-seridian-500/30",
@@ -185,21 +186,21 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
               >
                 <span
                   className={cn(
-                    "flex h-6 w-6 items-center justify-center rounded-full text-xs",
+                    "flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full text-[10px] sm:text-xs",
                     isToday && "bg-seridian-500 text-white font-medium",
                     !isToday && "font-medium"
                   )}
                 >
                   {day.getDate()}
                 </span>
-                <div className="mt-1 flex flex-1 flex-col gap-0.5 overflow-hidden w-full">
+                <div className="mt-0.5 sm:mt-1 flex flex-1 flex-col gap-0.5 overflow-hidden w-full">
                   {dayBookings.slice(0, 3).map((b) => {
                     const colors = typeColors[b.type];
                     return (
                       <div
                         key={b._id}
                         className={cn(
-                          "flex items-center gap-1 rounded border px-1 py-0.5",
+                          "hidden sm:flex items-center gap-1 rounded border px-1 py-0.5",
                           colors.bg
                         )}
                         onClick={(e) => {
@@ -214,6 +215,19 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
                       </div>
                     );
                   })}
+                  {dayBookings.length > 0 && (
+                    <div className="flex sm:hidden items-center gap-0.5 mt-0.5">
+                      {dayBookings.slice(0, 3).map((b) => {
+                        const colors = typeColors[b.type];
+                        return (
+                          <span
+                            key={b._id}
+                            className={cn("h-1.5 w-1.5 rounded-full shrink-0", colors.dot)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                   {dayBookings.length > 3 && (
                     <span className="text-[10px] text-slate-500 pl-1">
                       +{dayBookings.length - 3}

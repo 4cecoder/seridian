@@ -92,7 +92,7 @@ export function TemplateList({ onEdit, onAdd }: TemplateListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Email Templates</h2>
           <p className="text-sm text-slate-500">
@@ -101,7 +101,7 @@ export function TemplateList({ onEdit, onAdd }: TemplateListProps) {
               : `${templates.length} template${templates.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Button type="button" size="sm" onClick={onAdd}>
+        <Button type="button" size="sm" onClick={onAdd} className="self-start">
           + New Template
         </Button>
       </div>

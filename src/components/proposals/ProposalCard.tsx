@@ -100,7 +100,7 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {onBack && (
           <Button
             type="button"
@@ -109,10 +109,10 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
             onClick={onBack}
             className="text-slate-400"
           >
-            ← Back
+            \u2190 Back
           </Button>
         )}
-        <div className="flex-1" />
+        <div className="flex-1 min-w-0" />
         {proposal.status === "draft" && (
           <Button
             type="button"
@@ -156,11 +156,11 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
         )}
       </div>
 
-      <div className="rounded-xl border border-white/[0.06] bg-[#0c1222]/80 p-6">
-        <div className="flex items-start justify-between gap-4">
+      <div className="rounded-xl border border-white/[0.06] bg-[#0c1222]/80 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-white">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h2 className="text-lg sm:text-xl font-semibold text-white">
                 {proposal.title}
               </h2>
               <Badge
@@ -178,8 +178,8 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
             )}
           </div>
           {proposal.value !== undefined && (
-            <div className="text-right">
-              <p className="text-2xl font-bold text-white tabular-nums">
+            <div className="text-left sm:text-right shrink-0">
+              <p className="text-xl sm:text-2xl font-bold text-white tabular-nums">
                 {formatCurrency(proposal.value)}
               </p>
               <p className="text-[11px] text-slate-500">Proposal Value</p>
@@ -187,7 +187,7 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
           )}
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="mt-4 sm:mt-6 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
           <div className="rounded-lg bg-white/[0.02] p-3">
             <p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
               Created
@@ -220,7 +220,7 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
           <h3 className="text-xs font-medium uppercase tracking-wider text-slate-500">
             Content
           </h3>
-          <div className="mt-2 whitespace-pre-wrap rounded-lg bg-white/[0.02] p-4 text-sm leading-relaxed text-slate-300">
+          <div className="mt-4 sm:mt-6 whitespace-pre-wrap rounded-lg bg-white/[0.02] p-3 sm:p-4 text-sm leading-relaxed text-slate-300">
             {proposal.content}
           </div>
         </div>
@@ -230,7 +230,7 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
             <h3 className="text-xs font-medium uppercase tracking-wider text-slate-500">
               Notes
             </h3>
-            <div className="mt-2 whitespace-pre-wrap rounded-lg bg-white/[0.02] p-4 text-sm leading-relaxed text-slate-400">
+            <div className="mt-4 sm:mt-6 whitespace-pre-wrap rounded-lg bg-white/[0.02] p-3 sm:p-4 text-sm leading-relaxed text-slate-400">
               {proposal.notes}
             </div>
           </div>

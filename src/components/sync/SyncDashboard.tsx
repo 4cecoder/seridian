@@ -55,7 +55,7 @@ export function SyncDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-white">Sync Management</h1>
           <p className="text-sm text-slate-500">
@@ -66,7 +66,7 @@ export function SyncDashboard() {
           type="button"
           onClick={handleSyncAll}
           disabled={syncingAll}
-          className="inline-flex items-center gap-2 rounded-lg bg-seridian-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-seridian-400 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-seridian-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-seridian-400 disabled:cursor-not-allowed disabled:opacity-50 shrink-0"
         >
           {syncingAll ? (
             <>

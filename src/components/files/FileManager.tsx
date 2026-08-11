@@ -67,7 +67,7 @@ export function FileManager({ clientId }: FileManagerProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Files</h2>
           <p className="text-sm text-slate-500">
@@ -80,6 +80,7 @@ export function FileManager({ clientId }: FileManagerProps) {
           type="button"
           size="sm"
           onClick={() => setShowUpload(!showUpload)}
+          className="self-start"
         >
           {showUpload ? "Close" : "+ Upload"}
         </Button>

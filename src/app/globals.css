@@ -129,6 +129,14 @@ h3 {
     0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* 404 page animations */
 @keyframes pulse-glow {
   0%, 100% {

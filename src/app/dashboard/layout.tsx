@@ -1,5 +1,3 @@
-"use client";
-
 import { ConvexClientProvider } from "../ConvexClientProvider";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 

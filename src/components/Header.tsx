@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Badge, Button } from "@bytecats/ui-kit";
+import { Button } from "@bytecats/ui-kit";
 
 const navLinks = [
   { href: "/#services", label: "Services" },
@@ -14,6 +15,8 @@ const navLinks = [
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+  const isDashboard = pathname.startsWith("/dashboard");
 
   return (
     <header className="fixed top-0 z-50 w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
@@ -40,24 +43,27 @@ export function Header() {
           <span className="font-display text-lg font-semibold tracking-tight text-white">
             Seridian
           </span>
-          <Badge
-            variant="secondary"
-            className="hidden border-seridian-500/20 bg-seridian-500/10 text-seridian-300 sm:inline-flex"
-          >
-            Consulting
-          </Badge>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
+          {!isDashboard &&
+            navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm text-slate-400 transition-colors hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
+          {isDashboard && (
             <Link
-              key={link.href}
-              href={link.href}
+              href="/"
               className="text-sm text-slate-400 transition-colors hover:text-white"
             >
-              {link.label}
+              Home
             </Link>
-          ))}
+          )}
           <Button
             asChild
             size="sm"
@@ -94,16 +100,26 @@ export function Header() {
       {mobileOpen && (
         <nav className="border-t border-white/5 bg-slate-950/95 px-6 py-4 md:hidden">
           <div className="flex flex-col gap-4">
-            {navLinks.map((link) => (
+            {!isDashboard &&
+              navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm text-slate-400 transition-colors hover:text-white"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            {isDashboard && (
               <Link
-                key={link.href}
-                href={link.href}
+                href="/"
                 className="text-sm text-slate-400 transition-colors hover:text-white"
                 onClick={() => setMobileOpen(false)}
               >
-                {link.label}
+                Home
               </Link>
-            ))}
+            )}
             <Button
               asChild
               className="rounded-lg bg-seridian-500 px-4 py-2.5 text-center text-sm font-medium text-slate-950 hover:bg-seridian-400"

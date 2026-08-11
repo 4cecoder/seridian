@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Tabs, TabsList, TabsTrigger, TabsContent, Button, Badge } from "@bytecats/ui-kit";
-import { SyncCw, GitBranch, Layers, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { RefreshCw, GitBranch, Layers, CheckCircle, AlertCircle } from "lucide-react";
 import { LinearSyncSection } from "@/components/sync/LinearSyncSection";
 import { GitHubSyncSection } from "@/components/sync/GitHubSyncSection";
 
@@ -14,42 +14,14 @@ export function SyncDashboard() {
   const githubStats = useQuery(api.githubIngest.getGitHubStats);
   const syncLinear = useAction(api.linearSync.syncAllLinear);
   const syncGitHub = useAction(api.githubSync.syncAllGitHub);
-  const [syncingLinear, setSyncingLinear] = useState(false);
-  const [syncingGitHub, setSyncingGitHub] = useState(false);
   const [syncingAll, setSyncingAll] = useState(false);
   const [lastResult, setLastResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const linearIssues = linearStats?.totalIssues ?? 0;
-  const linearTeams = linearStats?.totalTeams ?? 0;
-  const linearProjects = linearStats?.totalProjects ?? 0;
+  const linearIssues = linearStats?.counts?.issues ?? 0;
+  const linearTeams = linearStats?.counts?.teams ?? 0;
+  const linearProjects = linearStats?.counts?.projects ?? 0;
   const githubIssues = githubStats?.totalIssues ?? 0;
   const githubProjects = githubStats?.totalProjects ?? 0;
-
-  const handleSyncLinear = useCallback(async () => {
-    setSyncingLinear(true);
-    setLastResult(null);
-    try {
-      await syncLinear({});
-      setLastResult({ type: "success", message: "Linear synced successfully" });
-    } catch (err) {
-      setLastResult({ type: "error", message: err instanceof Error ? err.message : "Linear sync failed" });
-    } finally {
-      setSyncingLinear(false);
-    }
-  }, [syncLinear]);
-
-  const handleSyncGitHub = useCallback(async () => {
-    setSyncingGitHub(true);
-    setLastResult(null);
-    try {
-      await syncGitHub({});
-      setLastResult({ type: "success", message: "GitHub synced successfully" });
-    } catch (err) {
-      setLastResult({ type: "error", message: err instanceof Error ? err.message : "GitHub sync failed" });
-    } finally {
-      setSyncingGitHub(false);
-    }
-  }, [syncGitHub]);
 
   const handleSyncAll = useCallback(async () => {
     setSyncingAll(true);
@@ -68,7 +40,7 @@ export function SyncDashboard() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <SyncCw className="h-5 w-5 text-slate-400" />
+          <RefreshCw className="h-5 w-5 text-slate-400" />
           <span className="text-sm text-slate-400">
             {linearIssues + githubIssues} issues synced
           </span>
@@ -84,9 +56,9 @@ export function SyncDashboard() {
           className="bg-seridian-500 text-white hover:bg-seridian-400"
         >
           {syncingAll ? (
-            <SyncCw className="mr-2 h-3.5 w-3.5 animate-spin" />
+            <RefreshCw className="mr-2 h-3.5 w-3.5 animate-spin" />
           ) : (
-            <SyncCw className="mr-2 h-3.5 w-3.5" />
+            <RefreshCw className="mr-2 h-3.5 w-3.5" />
           )}
           Sync All
         </Button>
@@ -128,11 +100,11 @@ export function SyncDashboard() {
         </TabsList>
 
         <TabsContent value="linear" className="mt-4">
-          <LinearSyncSection onSync={handleSyncLinear} syncing={syncingLinear} />
+          <LinearSyncSection />
         </TabsContent>
 
         <TabsContent value="github" className="mt-4">
-          <GitHubSyncSection onSync={handleSyncGitHub} syncing={syncingGitHub} />
+          <GitHubSyncSection />
         </TabsContent>
       </Tabs>
     </div>

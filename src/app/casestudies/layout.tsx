@@ -1,6 +1,6 @@
 "use client";
 
-import { ConvexClientProvider } from "../ConvexClientProvider";
+import { ConvexClientProvider } from "../../ConvexClientProvider";
 
 export default function CaseStudiesLayout({
   children,

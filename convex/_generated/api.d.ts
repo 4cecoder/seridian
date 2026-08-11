@@ -15,9 +15,12 @@ import type * as chat from "../chat.js";
 import type * as clients from "../clients.js";
 import type * as contracts from "../contracts.js";
 import type * as deals from "../deals.js";
+import type * as emailTemplates from "../emailTemplates.js";
+import type * as files from "../files.js";
 import type * as issues from "../issues.js";
 import type * as linearSync from "../linearSync.js";
 import type * as messages from "../messages.js";
+import type * as proposals from "../proposals.js";
 import type * as users from "../users.js";
 
 import type {
@@ -34,9 +37,12 @@ declare const fullApi: ApiFromModules<{
   clients: typeof clients;
   contracts: typeof contracts;
   deals: typeof deals;
+  emailTemplates: typeof emailTemplates;
+  files: typeof files;
   issues: typeof issues;
   linearSync: typeof linearSync;
   messages: typeof messages;
+  proposals: typeof proposals;
   users: typeof users;
 }>;
 

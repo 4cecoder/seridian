@@ -156,4 +156,61 @@ export default defineSchema({
   })
     .index("by_pubkey", ["pubkey"])
     .index("by_status", ["status"]),
+
+  proposals: defineTable({
+    title: v.string(),
+    clientId: v.optional(v.id("clients")),
+    content: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("sent"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+      v.literal("expired"),
+    ),
+    value: v.optional(v.number()),
+    validUntil: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    acceptedAt: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_clientId", ["clientId"])
+    .index("by_createdBy", ["createdBy"]),
+
+  emailTemplates: defineTable({
+    name: v.string(),
+    subject: v.string(),
+    body: v.string(),
+    category: v.union(
+      v.literal("proposal"),
+      v.literal("invoice"),
+      v.literal("follow_up"),
+      v.literal("welcome"),
+      v.literal("custom"),
+    ),
+    variables: v.array(v.string()),
+    createdBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_category", ["category"])
+    .index("by_createdBy", ["createdBy"]),
+
+  files: defineTable({
+    name: v.string(),
+    type: v.string(),
+    size: v.number(),
+    storageId: v.id("_storage"),
+    parentId: v.optional(v.string()),
+    clientId: v.optional(v.id("clients")),
+    uploadedBy: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_parentId", ["parentId"])
+    .index("by_clientId", ["clientId"])
+    .index("by_type", ["type"]),
 });

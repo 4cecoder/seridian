@@ -12,7 +12,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed": "bun run seed.ts",
+    "convex:dev": "bunx convex dev",
+    "convex:deploy": "bunx convex deploy"
   },
   "dependencies": {
     "@bytecats/ui-kit": "file:./vendor/ui-kit",

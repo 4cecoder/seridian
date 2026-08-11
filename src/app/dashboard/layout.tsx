@@ -1,5 +1,6 @@
 import { ConvexClientProvider } from "../ConvexClientProvider";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { QueryProvider } from "../QueryProvider";
 
 export default function DashboardRootLayout({
   children,
@@ -7,8 +8,10 @@ export default function DashboardRootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ConvexClientProvider>
-      <DashboardLayout>{children}</DashboardLayout>
-    </ConvexClientProvider>
+    <QueryProvider>
+      <ConvexClientProvider>
+        <DashboardLayout>{children}</DashboardLayout>
+      </ConvexClientProvider>
+    </QueryProvider>
   );
 }

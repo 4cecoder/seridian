@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
+export const runtime = "edge";
 
 export default function Icon() {
   return new ImageResponse(
@@ -13,11 +14,20 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #22d3ee, #0891b2)",
+          background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
           borderRadius: 6,
         }}
       >
-        <span style={{ fontSize: 20, fontWeight: 700, color: "#070b14" }}>S</span>
+        <span
+          style={{
+            fontSize: 20,
+            fontWeight: 700,
+            color: "#ffffff",
+            fontFamily: "sans-serif",
+          }}
+        >
+          S
+        </span>
       </div>
     ),
     { ...size },

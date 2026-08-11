@@ -143,11 +143,7 @@ export function Contact() {
                 </div>
                 <p className="text-xs text-slate-500">
                   Prefer email? Use the link above or submit the form — every submission creates a Linear issue in{" "}
-                  <span className="text-slate-300">SER / Seridian Site Refresh</span> with label{" "}
-                  <span className="rounded bg-white/5 px-1 py-0.5 font-mono text-[11px] text-slate-300">
-                    source:contact-form
-                  </span>
-                  .
+                  <span className="text-slate-300">ROD / RodAndDee</span>.
                 </p>
               </div>
             </div>

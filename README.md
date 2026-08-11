@@ -70,6 +70,26 @@ import Image from "next/image";
 - **GitHub:** [https://github.com/therodfather/seridian](https://github.com/therodfather/seridian)
 - **Netlify dashboard:** [https://app.netlify.com/projects/seridian](https://app.netlify.com/projects/seridian)
 
+## Contact form (Linear)
+
+Submissions from the contact form create issues in Linear via `POST /api/contact`. The API key must **never** be committed — configure it as a Netlify environment variable (and in `.env.local` for local dev).
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `LINEAR_API_KEY` | Yes | Personal API key from [Linear settings](https://linear.app/settings/api) |
+| `LINEAR_TEAM_ID` | Yes | Team UUID (fetch with `{ teams { nodes { id key name } } }` against the GraphQL API) |
+
+Copy `.env.example` → `.env.local` for local development.
+
+**Netlify (production + deploy previews):**
+
+```bash
+npx netlify-cli env:set LINEAR_API_KEY "your_key" --context production --context deploy-preview
+npx netlify-cli env:set LINEAR_TEAM_ID "your_team_uuid" --context production --context deploy-preview
+```
+
+Redeploy after changing env vars so they take effect on deployed builds.
+
 ## Deploy
 
 Pushes to `main` automatically deploy via Netlify. To deploy manually from the CLI:

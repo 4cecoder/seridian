@@ -17,9 +17,24 @@ export function Header() {
     <header className="fixed top-0 z-50 w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <a href="#" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-seridian-400 to-seridian-600">
-            <span className="text-sm font-bold text-slate-950">S</span>
-          </div>
+          <span
+            aria-label="Seridian logo"
+            className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+          >
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="h-full w-full object-contain"
+              aria-hidden="true"
+            >
+              <source
+                src="/assets/images/Can_you_make_a_video_of_that_a.mp4"
+                type="video/mp4"
+              />
+            </video>
+          </span>
           <span className="font-display text-lg font-semibold tracking-tight text-white">
             Seridian
           </span>

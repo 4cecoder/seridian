@@ -38,6 +38,25 @@ src/
     └── Footer.tsx       # Site footer
 ```
 
+## Assets
+
+Static files live in `public/` and are served from the site root:
+
+```
+public/assets/
+├── images/   # Photos, hero images, backgrounds
+├── icons/    # Logos, favicons, brand marks
+└── fonts/    # Local font files (optional)
+```
+
+Reference them with root-relative paths, e.g. `/assets/images/hero.jpg` or:
+
+```tsx
+import Image from "next/image";
+
+<Image src="/assets/icons/logo.svg" alt="Seridian" width={120} height={40} />
+```
+
 ## Customization
 
 - Update contact email in `src/components/Contact.tsx`

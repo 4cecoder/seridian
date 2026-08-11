@@ -6,9 +6,24 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-seridian-400 to-seridian-600">
-              <span className="text-xs font-bold text-slate-950">S</span>
-            </div>
+            <span
+              aria-label="Seridian logo"
+              className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md"
+            >
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="h-full w-full object-contain"
+                aria-hidden="true"
+              >
+                <source
+                  src="/assets/images/Can_you_make_a_video_of_that_a.mp4"
+                  type="video/mp4"
+                />
+              </video>
+            </span>
             <span className="font-display text-sm font-semibold text-white">Seridian</span>
           </div>
 

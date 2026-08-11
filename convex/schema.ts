@@ -60,8 +60,61 @@ export default defineSchema({
     .index("by_clientId", ["clientId"])
     .index("by_status_and_clientId", ["status", "clientId"]),
 
+  bookings: defineTable({
+    title: v.string(),
+    clientId: v.id("clients"),
+    startTime: v.string(),
+    endTime: v.string(),
+    type: v.union(
+      v.literal("consultation"),
+      v.literal("development"),
+      v.literal("review"),
+    ),
+    notes: v.optional(v.string()),
+    location: v.optional(v.string()),
+    meetingUrl: v.optional(v.string()),
+  })
+    .index("by_startTime", ["startTime"])
+    .index("by_clientId", ["clientId"]),
+
   syncMeta: defineTable({
     key: v.string(),
     value: v.string(),
   }).index("by_key", ["key"]),
+
+  caseStudies: defineTable({
+    title: v.string(),
+    clientId: v.optional(v.id("clients")),
+    summary: v.string(),
+    challenge: v.string(),
+    solution: v.string(),
+    results: v.string(),
+    technologies: v.array(v.string()),
+    industry: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    published: v.boolean(),
+    order: v.number(),
+  })
+    .index("by_published", ["published"])
+    .index("by_order", ["order"]),
+
+  deals: defineTable({
+    name: v.string(),
+    clientId: v.id("clients"),
+    value: v.number(),
+    stage: v.union(
+      v.literal("lead"),
+      v.literal("proposal"),
+      v.literal("negotiation"),
+      v.literal("closed_won"),
+      v.literal("closed_lost"),
+    ),
+    probability: v.number(),
+    expectedCloseDate: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+  })
+    .index("by_stage", ["stage"])
+    .index("by_clientId", ["clientId"])
+    .index("by_stage_and_clientId", ["stage", "clientId"]),
 });

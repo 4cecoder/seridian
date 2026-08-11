@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createLinearIssue } from "@/lib/linear";
+import { createGitHubIssue } from "@/lib/github";
 
 export const runtime = "nodejs";
 
@@ -81,7 +81,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     service: "contact",
-    hint: "POST { name, email, message } to create a Linear issue",
+    hint: "POST { name, email, message } to create a GitHub issue on the project board",
   });
 }
 
@@ -122,9 +122,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: validated.error }, { status: 400 });
   }
 
-  const teamId = process.env.LINEAR_TEAM_ID;
-  if (!teamId) {
-    console.error("[/api/contact] LINEAR_TEAM_ID is not configured");
+  if (!process.env.GITHUB_TOKEN || !process.env.GITHUB_REPO) {
+    console.error("[/api/contact] GITHUB_TOKEN or GITHUB_REPO is not configured");
     return NextResponse.json(
       { ok: false, error: "Contact submissions are temporarily unavailable" },
       { status: 500 }
@@ -133,7 +132,7 @@ export async function POST(req: Request) {
 
   const { name, email, message } = validated.data;
   const title = `Contact form: ${name} <${email}>`.slice(0, 120);
-  const description = [
+  const issueBody = [
     "**Submitted via:** seridian.dev contact form",
     `**From:** ${name} <${email}>`,
     "",
@@ -142,15 +141,18 @@ export async function POST(req: Request) {
     message,
   ].join("\n");
 
-  const result = await createLinearIssue({ title, description, teamId });
+  const result = await createGitHubIssue({ title, body: issueBody });
 
   if (!result.ok) {
-    console.error("[/api/contact] createLinearIssue failed:", result.error);
+    console.error("[/api/contact] createGitHubIssue failed:", result.error);
     return NextResponse.json(
       { ok: false, error: "Contact submission failed — please try again later" },
       { status: 502 }
     );
   }
 
-  return NextResponse.json({ ok: true, identifier: result.identifier }, { status: 201 });
+  return NextResponse.json(
+    { ok: true, identifier: result.identifier, number: result.number, url: result.url },
+    { status: 201 }
+  );
 }

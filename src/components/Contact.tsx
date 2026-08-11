@@ -80,7 +80,7 @@ export function Contact() {
       }
 
       if (data.identifier) {
-        setToast({ msg: `Message sent — Linear ${data.identifier} created`, type: "success" });
+        setToast({ msg: `Message sent — Issue ${data.identifier} created`, type: "success" });
       } else {
         setToast({ msg: "Message sent — thank you!", type: "success" });
       }
@@ -142,8 +142,8 @@ export function Contact() {
                   </a>
                 </div>
                 <p className="text-xs text-slate-500">
-                  Prefer email? Use the link above or submit the form — every submission creates a Linear issue in{" "}
-                  <span className="text-slate-300">ROD / RodAndDee</span>.
+                  Prefer email? Use the link above or submit the form — every submission creates a GitHub issue on our{" "}
+                  <span className="text-slate-300">project board</span>.
                 </p>
               </div>
             </div>

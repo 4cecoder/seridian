@@ -7,33 +7,26 @@ import { MessageList } from "./MessageList";
 import { MessageInput } from "./MessageInput";
 import { UserPanel } from "./UserPanel";
 import { ChannelForm } from "./ChannelForm";
-import { Doc, Id } from "convex/_generated/dataModel";
-
-type Channel = Doc<"channels">;
+import { Id } from "convex/_generated/dataModel";
 
 interface ChatLayoutProps {
   currentUserId?: string;
+  currentUserName?: string;
 }
 
-export function ChatLayout({ currentUserId }: ChatLayoutProps) {
-  const [activeChannelId, setActiveChannelId] = useState<
-    Id<"channels"> | undefined
-  >();
-  const [mobilePanel, setMobilePanel] = useState<"channels" | "messages" | "users">("channels");
+export function ChatLayout({ currentUserId, currentUserName }: ChatLayoutProps) {
+  const [activeChannelId, setActiveChannelId] = useState<Id<"channels"> | undefined>();
+  const [mobilePanel, setMobilePanel] = useState<"channels" | "messages">("channels");
   const [channelFormOpen, setChannelFormOpen] = useState(false);
-  const [userPanelOpen, setUserPanelOpen] = useState(false);
 
   function handleChannelSelect(channelId: Id<"channels">) {
     setActiveChannelId(channelId);
     setMobilePanel("messages");
   }
 
-  function handleBack() {
-    setMobilePanel("channels");
-  }
-
   return (
     <div className="flex h-[calc(100vh-64px)] overflow-hidden rounded-lg border border-white/[0.08] bg-[#070b14]">
+      {/* Sidebar — channels */}
       <div
         className={cn(
           "flex h-full flex-col border-r border-white/[0.08] bg-[#0c1222] transition-all duration-200",
@@ -49,6 +42,7 @@ export function ChatLayout({ currentUserId }: ChatLayoutProps) {
         />
       </div>
 
+      {/* Main — messages */}
       <div
         className={cn(
           "flex h-full flex-1 flex-col min-w-0",
@@ -60,7 +54,7 @@ export function ChatLayout({ currentUserId }: ChatLayoutProps) {
             <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3 md:hidden">
               <button
                 type="button"
-                onClick={handleBack}
+                onClick={() => setMobilePanel("channels")}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-white/[0.05] hover:text-white transition-colors"
               >
                 ←
@@ -73,7 +67,11 @@ export function ChatLayout({ currentUserId }: ChatLayoutProps) {
               channelId={activeChannelId}
               currentUserId={currentUserId}
             />
-            <MessageInput channelId={activeChannelId} />
+            <MessageInput
+              channelId={activeChannelId}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+            />
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center text-slate-600 text-sm">
@@ -82,30 +80,16 @@ export function ChatLayout({ currentUserId }: ChatLayoutProps) {
         )}
       </div>
 
-      <div
-        className={cn(
-          "hidden md:flex h-full w-[240px] min-w-[240px] flex-col border-l border-white/[0.08] bg-[#0c1222]",
-          userPanelOpen && "!flex"
-        )}
-      >
+      {/* Sidebar — users (desktop only) */}
+      <div className="hidden md:flex h-full w-[240px] min-w-[240px] flex-col border-l border-white/[0.08] bg-[#0c1222]">
         <UserPanel currentUserId={currentUserId} />
       </div>
 
-      {mobilePanel === "users" && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={() => setMobilePanel("messages")}
-          />
-          <div className="relative ml-auto flex h-full w-[280px] flex-col bg-[#0c1222]">
-            <UserPanel currentUserId={currentUserId} />
-          </div>
-        </div>
-      )}
-
+      {/* Channel creation modal */}
       <ChannelForm
         open={channelFormOpen}
         onOpenChange={setChannelFormOpen}
+        currentUserId={currentUserId}
         onSuccess={(channelId) => {
           setChannelFormOpen(false);
           handleChannelSelect(channelId);

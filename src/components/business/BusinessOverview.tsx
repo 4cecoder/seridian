@@ -40,11 +40,19 @@ function MetricCard({
   );
 }
 
+function formatCurrency(value: number): string {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return `$${value.toLocaleString()}`;
+}
+
 export function BusinessOverview() {
   const clients = useQuery(api.clients.list, { status: "active" });
   const deals = useQuery(api.deals.list, {});
   const bookings = useQuery(api.bookings.list, {});
-  const publishedCaseStudies = useQuery(api.caseStudies.count, { published: true });
+  const publishedCaseStudies = useQuery(api.caseStudies.count, {
+    published: true,
+  });
 
   const activeDealsValue =
     deals
@@ -58,12 +66,6 @@ export function BusinessOverview() {
       const bookingDate = new Date(b.startTime);
       return bookingDate >= now && bookingDate <= nextWeek;
     }).length ?? 0;
-
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
-    return `$${value.toLocaleString()}`;
-  };
 
   return (
     <div className="space-y-4">
@@ -89,7 +91,7 @@ export function BusinessOverview() {
           value={upcomingBookings}
           icon="◷"
           loading={bookings === undefined}
-          />
+        />
         <MetricCard
           label="Published Case Studies"
           value={publishedCaseStudies ?? 0}

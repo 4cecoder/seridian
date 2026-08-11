@@ -82,6 +82,7 @@ export function ProposalForm({ proposal, onSuccess, onCancel }: ProposalFormProp
           : undefined,
         notes: notes.trim() || undefined,
         status,
+        createdBy: "current-user",
       };
 
       if (proposal) {

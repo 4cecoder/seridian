@@ -72,11 +72,10 @@ function TemplateCard({
       </p>
 
       <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-slate-600">
-            {template.variables.length} variable{template.variables.length !== 1 ? "s" : ""}
-          </span>
-        </div>
+        <span className="text-[11px] text-slate-600">
+          {template.variables.length} variable
+          {template.variables.length !== 1 ? "s" : ""}
+        </span>
         <span className="text-[11px] text-slate-600">
           {new Date(template.createdAt).toLocaleDateString("en-US", {
             month: "short",

@@ -11,7 +11,7 @@ interface UserPanelProps {
   currentUserId?: string;
 }
 
-const statusColors: Record<string, string> = {
+const STATUS_COLORS: Record<User["status"], string> = {
   online: "bg-green-400",
   away: "bg-amber-400",
   offline: "bg-slate-600",
@@ -34,7 +34,7 @@ function UserRow({ user, isCurrent }: { user: User; isCurrent: boolean }) {
         <div
           className={cn(
             "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#0c1222]",
-            statusColors[user.status]
+            STATUS_COLORS[user.status]
           )}
         />
       </div>
@@ -51,12 +51,9 @@ function UserRow({ user, isCurrent }: { user: User; isCurrent: boolean }) {
 export function UserPanel({ currentUserId }: UserPanelProps) {
   const users = useQuery(api.users.list, {});
 
-  const onlineUsers =
-    users?.filter((u) => u.status === "online") ?? [];
-  const awayUsers =
-    users?.filter((u) => u.status === "away") ?? [];
-  const offlineUsers =
-    users?.filter((u) => u.status === "offline") ?? [];
+  const onlineUsers = users?.filter((u) => u.status === "online") ?? [];
+  const awayUsers = users?.filter((u) => u.status === "away") ?? [];
+  const offlineUsers = users?.filter((u) => u.status === "offline") ?? [];
 
   return (
     <div className="flex h-full flex-col">

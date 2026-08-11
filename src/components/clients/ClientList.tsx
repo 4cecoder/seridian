@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
@@ -67,7 +68,7 @@ function ClientRow({
 
         {client.email && (
           <div className="hidden text-right md:block">
-            <p className="truncate text-xs text-slate-500 max-w-[160px]">
+            <p className="truncate max-w-[160px] text-xs text-slate-500">
               {client.email}
             </p>
           </div>
@@ -91,17 +92,17 @@ export function ClientList({ onEdit, onAdd }: ClientListProps) {
   const clients = useQuery(api.clients.list, {});
   const issues = useQuery(api.issues.list, {});
 
-  const issueCountByClient = new Map<string, number>();
-  if (issues) {
-    for (const issue of issues) {
-      if (issue.clientId) {
-        issueCountByClient.set(
-          issue.clientId,
-          (issueCountByClient.get(issue.clientId) ?? 0) + 1
-        );
+  const issueCountByClient = useMemo(() => {
+    const map = new Map<string, number>();
+    if (issues) {
+      for (const issue of issues) {
+        if (issue.clientId) {
+          map.set(issue.clientId, (map.get(issue.clientId) ?? 0) + 1);
+        }
       }
     }
-  }
+    return map;
+  }, [issues]);
 
   return (
     <div className="space-y-4">

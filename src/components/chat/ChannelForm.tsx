@@ -9,10 +9,11 @@ import { cn } from "@/lib/utils";
 interface ChannelFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  currentUserId?: string;
   onSuccess: (channelId: Id<"channels">) => void;
 }
 
-export function ChannelForm({ open, onOpenChange, onSuccess }: ChannelFormProps) {
+export function ChannelForm({ open, onOpenChange, currentUserId, onSuccess }: ChannelFormProps) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<"public" | "private">("public");
@@ -29,7 +30,7 @@ export function ChannelForm({ open, onOpenChange, onSuccess }: ChannelFormProps)
         name: name.trim(),
         description: description.trim() || undefined,
         type,
-        createdBy: "current-user",
+        createdBy: currentUserId ?? "anonymous",
         participants: [],
       });
       setName("");

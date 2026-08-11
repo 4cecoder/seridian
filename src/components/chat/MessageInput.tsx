@@ -7,9 +7,11 @@ import { Id } from "convex/_generated/dataModel";
 
 interface MessageInputProps {
   channelId: Id<"channels">;
+  currentUserId?: string;
+  currentUserName?: string;
 }
 
-export function MessageInput({ channelId }: MessageInputProps) {
+export function MessageInput({ channelId, currentUserId, currentUserName }: MessageInputProps) {
   const [content, setContent] = useState("");
   const sendMessage = useMutation(api.messages.send);
 
@@ -20,8 +22,8 @@ export function MessageInput({ channelId }: MessageInputProps) {
     try {
       await sendMessage({
         channelId,
-        senderId: "current-user",
-        senderName: "You",
+        senderId: currentUserId ?? "anonymous",
+        senderName: currentUserName ?? "Anonymous",
         content: trimmed,
         type: "text",
       });
@@ -29,7 +31,7 @@ export function MessageInput({ channelId }: MessageInputProps) {
     } catch {
       // Silently fail — message will retry on next attempt
     }
-  }, [content, channelId, sendMessage]);
+  }, [content, channelId, sendMessage, currentUserId, currentUserName]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {

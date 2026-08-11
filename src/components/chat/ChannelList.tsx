@@ -56,22 +56,13 @@ export function ChannelList({
   currentUserId,
 }: ChannelListProps) {
   const channels = useQuery(api.channels.list, {});
-  const messages = useQuery(api.messages.listAll, {});
-
-  const lastMessageByChannel = new Map<string, string>();
-  if (messages) {
-    for (const msg of messages) {
-      const existing = lastMessageByChannel.get(msg.channelId);
-      if (!existing) {
-        lastMessageByChannel.set(msg.channelId, msg.content);
-      }
-    }
-  }
 
   const publicChannels = channels?.filter((c) => c.type === "public") ?? [];
   const privateChannels = channels?.filter((c) => c.type === "private") ?? [];
   const directChannels =
-    channels?.filter((c) => c.type === "direct" && c.participants.includes(currentUserId ?? "")) ?? [];
+    channels?.filter(
+      (c) => c.type === "direct" && c.participants.includes(currentUserId ?? "")
+    ) ?? [];
 
   return (
     <div className="flex h-full flex-col">

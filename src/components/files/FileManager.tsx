@@ -11,20 +11,20 @@ import { FileUpload } from "./FileUpload";
 type FileRecord = Doc<"files">;
 
 const fileTypeIcons: Record<string, string> = {
-  "image/": "🖼",
-  "application/pdf": "📄",
-  "text/": "📝",
-  "application/zip": "📦",
+  "image/": "\u{1F5BC}",
+  "application/pdf": "\u{1F4C4}",
+  "text/": "\u{1F4DD}",
+  "application/zip": "\u{1F4E6}",
   "application/json": "{ }",
-  "video/": "🎬",
-  "audio/": "🎵",
+  "video/": "\u{1F3AC}",
+  "audio/": "\u{1F3B5}",
 };
 
 function getFileIcon(type: string): string {
   for (const [prefix, icon] of Object.entries(fileTypeIcons)) {
     if (type.startsWith(prefix)) return icon;
   }
-  return "📎";
+  return "\u{1F4CE}";
 }
 
 function formatFileSize(bytes: number): string {
@@ -49,20 +49,17 @@ interface FileManagerProps {
 
 export function FileManager({ clientId }: FileManagerProps) {
   const [currentFolder, setCurrentFolder] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [showUpload, setShowUpload] = useState(false);
 
   const files = useQuery(api.files.list, {
     parentId: currentFolder,
-    clientId,
   });
   const removeFile = useMutation(api.files.remove);
 
-  const folders =
-    files?.filter((f) => f.type === "folder") ?? [];
-  const fileItems =
-    files?.filter((f) => f.type !== "folder") ?? [];
+  const folders = files?.filter((f) => f.type === "folder") ?? [];
+  const fileItems = files?.filter((f) => f.type !== "folder") ?? [];
 
   async function handleDelete(fileId: Id<"files">) {
     await removeFile({ fileId });
@@ -102,7 +99,7 @@ export function FileManager({ clientId }: FileManagerProps) {
           onClick={() => setCurrentFolder(undefined)}
           className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
         >
-          ← Back to root
+          &larr; Back to root
         </button>
       )}
 
@@ -128,10 +125,12 @@ export function FileManager({ clientId }: FileManagerProps) {
               className={cn(
                 "group flex w-full items-center gap-3 rounded-lg border border-white/[0.06] bg-[#0c1222]/80 px-4 py-2.5 text-left",
                 "transition-all duration-150",
-                "hover:border-seridian-500/20 hover:bg-[#0c1222]"
+                "hover:border-seridian-500/20 hover:bg-[#0c1222]",
               )}
             >
-              <span className="text-base">📁</span>
+              <span className="text-base" aria-hidden="true">
+                📁
+              </span>
               <span className="min-w-0 flex-1 truncate text-sm text-slate-200 group-hover:text-white">
                 {folder.name}
               </span>
@@ -147,10 +146,12 @@ export function FileManager({ clientId }: FileManagerProps) {
               className={cn(
                 "group flex items-center gap-3 rounded-lg border border-white/[0.06] bg-[#0c1222]/80 px-4 py-2.5",
                 "transition-all duration-150",
-                "hover:border-seridian-500/20 hover:bg-[#0c1222]"
+                "hover:border-seridian-500/20 hover:bg-[#0c1222]",
               )}
             >
-              <span className="text-base">{getFileIcon(file.type)}</span>
+              <span className="text-base" aria-hidden="true">
+                {getFileIcon(file.type)}
+              </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm text-slate-200 group-hover:text-white">
                   {file.name}

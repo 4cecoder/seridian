@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@bytecats/ui-kit";
+import { Id } from "convex/_generated/dataModel";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -13,8 +17,6 @@ import {
 import { KanbanBoard } from "@/components/kanban/KanbanBoard";
 import { ClientList } from "@/components/clients/ClientList";
 import { ClientForm } from "@/components/clients/ClientForm";
-import { CaseStudyList } from "@/components/casestudies/CaseStudyList";
-import { CaseStudyForm } from "@/components/casestudies/CaseStudyForm";
 import { BusinessOverview } from "@/components/business/BusinessOverview";
 import { ProposalList } from "@/components/proposals/ProposalList";
 import { ProposalForm } from "@/components/proposals/ProposalForm";
@@ -22,50 +24,80 @@ import { ProposalCard } from "@/components/proposals/ProposalCard";
 import { TemplateList } from "@/components/emailtemplates/TemplateList";
 import { TemplateForm } from "@/components/emailtemplates/TemplateForm";
 import { FileManager } from "@/components/files/FileManager";
-import { Id } from "convex/_generated/dataModel";
+import { BookingCalendar } from "@/components/bookings/BookingCalendar";
+import { PipelineBoard } from "@/components/sales/PipelineBoard";
+import { LoginScreen } from "@/components/auth/LoginScreen";
+
+function getStoredUser() {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("seridian_user");
+  if (stored) {
+    try { return JSON.parse(stored); } catch { return null; }
+  }
+  return null;
+}
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [clientFormOpen, setClientFormOpen] = useState(false);
-  const [editingClientId, setEditingClientId] = useState<
-    Id<"clients"> | undefined
-  >();
-  const [caseStudyFormOpen, setCaseStudyFormOpen] = useState(false);
-  const [editingCaseStudyId, setEditingCaseStudyId] = useState<
-    Id<"caseStudies"> | undefined
-  >();
-  const [proposalFormOpen, setProposalFormOpen] = useState(false);
-  const [editingProposalId, setEditingProposalId] = useState<
-    Id<"proposals"> | undefined
-  >();
-  const [viewingProposalId, setViewingProposalId] = useState<
-    Id<"proposals"> | undefined
-  >();
-  const [templateFormOpen, setTemplateFormOpen] = useState(false);
-  const [editingTemplateId, setEditingTemplateId] = useState<
-    Id<"emailTemplates"> | undefined
-  >();
+  const [user, setUser] = useState<{ pubkey: string; name: string } | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    setUser(getStoredUser());
+    setLoading(false);
+  }, []);
+
+  function handleLogin(pubkey: string, name: string) {
+    localStorage.setItem("seridian_user", JSON.stringify({ pubkey, name }));
+    setUser({ pubkey, name });
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("seridian_user");
+    setUser(null);
+  }
+
+  if (loading) return null;
+  if (!user) return <LoginScreen onLogin={handleLogin} />;
+
+  const [activeTab, setActiveTab] = useState("overview");
+
+  // Client form state
+  const [clientFormOpen, setClientFormOpen] = useState(false);
+  const [editingClientId, setEditingClientId] = useState<Id<"clients"> | undefined>();
+
+  // Proposal form state
+  const [proposalFormOpen, setProposalFormOpen] = useState(false);
+  const [editingProposalId, setEditingProposalId] = useState<Id<"proposals"> | undefined>();
+  const [viewingProposalId, setViewingProposalId] = useState<Id<"proposals"> | undefined>();
+
+  // Template form state
+  const [templateFormOpen, setTemplateFormOpen] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<Id<"emailTemplates"> | undefined>();
+
+  // Deal form state
+  const [dealFormOpen, setDealFormOpen] = useState(false);
+
+  // Booking form state
+  const [bookingFormOpen, setBookingFormOpen] = useState(false);
+  const [bookingFormDate, setBookingFormDate] = useState<string | undefined>();
+
+  // Convex queries for edit data
   const editingClient = useQuery(
     api.clients.get,
-    editingClientId ? { clientId: editingClientId } : "skip"
-  );
-
-  const editingCaseStudy = useQuery(
-    api.caseStudies.get,
-    editingCaseStudyId ? { caseStudyId: editingCaseStudyId } : "skip"
+    editingClientId ? { clientId: editingClientId } : "skip",
   );
 
   const editingProposal = useQuery(
     api.proposals.get,
-    editingProposalId ? { proposalId: editingProposalId } : "skip"
+    editingProposalId ? { proposalId: editingProposalId } : "skip",
   );
 
   const editingTemplate = useQuery(
     api.emailTemplates.get,
-    editingTemplateId ? { templateId: editingTemplateId } : "skip"
+    editingTemplateId ? { templateId: editingTemplateId } : "skip",
   );
 
+  // --- Client handlers ---
   function handleAddClient() {
     setEditingClientId(undefined);
     setClientFormOpen(true);
@@ -81,21 +113,7 @@ export default function DashboardPage() {
     setEditingClientId(undefined);
   }
 
-  function handleAddCaseStudy() {
-    setEditingCaseStudyId(undefined);
-    setCaseStudyFormOpen(true);
-  }
-
-  function handleEditCaseStudy(caseStudyId: Id<"caseStudies">) {
-    setEditingCaseStudyId(caseStudyId);
-    setCaseStudyFormOpen(true);
-  }
-
-  function handleCaseStudyFormSuccess() {
-    setCaseStudyFormOpen(false);
-    setEditingCaseStudyId(undefined);
-  }
-
+  // --- Proposal handlers ---
   function handleAddProposal() {
     setEditingProposalId(undefined);
     setViewingProposalId(undefined);
@@ -119,6 +137,7 @@ export default function DashboardPage() {
     setEditingProposalId(undefined);
   }
 
+  // --- Template handlers ---
   function handleAddTemplate() {
     setEditingTemplateId(undefined);
     setTemplateFormOpen(true);
@@ -134,65 +153,88 @@ export default function DashboardPage() {
     setEditingTemplateId(undefined);
   }
 
+  // --- Booking handlers ---
+  function handleBookingDayClick(date: string) {
+    setBookingFormDate(date);
+    setBookingFormOpen(true);
+  }
+
+  // --- Deal handlers ---
+  function handleAddDeal() {
+    setDealFormOpen(true);
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white">{user.name}</span>
+          <span className="text-xs text-slate-500">({user.pubkey})</span>
+        </div>
+        <button
+          onClick={handleLogout}
+          className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          Sign out
+        </button>
+      </div>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList variant="line">
-          <TabsTrigger value="overview" className="gap-1.5">
+        <TabsList variant="line" className="gap-0.5">
+          <TabsTrigger value="overview" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">⌂</span>
             Overview
           </TabsTrigger>
-          <TabsTrigger value="issues" className="gap-1.5">
+          <TabsTrigger value="issues" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">☐</span>
             Issues
           </TabsTrigger>
-          <TabsTrigger value="clients" className="gap-1.5">
+          <TabsTrigger value="clients" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">◎</span>
             Clients
           </TabsTrigger>
-          <TabsTrigger value="bookings" className="gap-1.5">
+          <TabsTrigger value="bookings" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">◷</span>
             Bookings
           </TabsTrigger>
-          <TabsTrigger value="sales" className="gap-1.5">
+          <TabsTrigger value="sales" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">▭</span>
             Sales
           </TabsTrigger>
-          <TabsTrigger value="proposals" className="gap-1.5">
+          <TabsTrigger value="proposals" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">⊞</span>
             Proposals
           </TabsTrigger>
-          <TabsTrigger value="templates" className="gap-1.5">
+          <TabsTrigger value="templates" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">✉</span>
             Templates
           </TabsTrigger>
-          <TabsTrigger value="files" className="gap-1.5">
-            <span aria-hidden="true"><FileIcon /></span>
+          <TabsTrigger value="files" className="gap-1 px-3 py-1.5 text-xs">
+            <FileIcon />
             Files
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="mt-6">
+        <TabsContent value="overview" className="mt-3">
           <BusinessOverview />
         </TabsContent>
 
-        <TabsContent value="issues" className="mt-6">
+        <TabsContent value="issues" className="mt-3">
           <KanbanBoard />
         </TabsContent>
 
-        <TabsContent value="clients" className="mt-6">
+        <TabsContent value="clients" className="mt-3">
           <ClientList onAdd={handleAddClient} onEdit={handleEditClient} />
         </TabsContent>
 
-        <TabsContent value="bookings" className="mt-6">
-          <BookingTab />
+        <TabsContent value="bookings" className="mt-3">
+          <BookingCalendar onDayClick={handleBookingDayClick} />
         </TabsContent>
 
-        <TabsContent value="sales" className="mt-6">
-          <SalesTab />
+        <TabsContent value="sales" className="mt-3">
+          <PipelineBoard onAddDeal={handleAddDeal} />
         </TabsContent>
 
-        <TabsContent value="proposals" className="mt-6">
+        <TabsContent value="proposals" className="mt-3">
           {viewingProposalId ? (
             <ProposalCard
               proposalId={viewingProposalId}
@@ -208,15 +250,16 @@ export default function DashboardPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="templates" className="mt-6">
+        <TabsContent value="templates" className="mt-3">
           <TemplateList onAdd={handleAddTemplate} onEdit={handleEditTemplate} />
         </TabsContent>
 
-        <TabsContent value="files" className="mt-6">
+        <TabsContent value="files" className="mt-3">
           <FileManager />
         </TabsContent>
       </Tabs>
 
+      {/* --- Client Dialog --- */}
       <Dialog open={clientFormOpen} onOpenChange={setClientFormOpen}>
         <DialogContent className="bg-[#0c1222] border-white/[0.08] sm:max-w-lg">
           <DialogHeader>
@@ -236,25 +279,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={caseStudyFormOpen} onOpenChange={setCaseStudyFormOpen}>
-        <DialogContent className="bg-[#0c1222] border-white/[0.08] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              {editingCaseStudyId ? "Edit Case Study" : "New Case Study"}
-            </DialogTitle>
-          </DialogHeader>
-          {editingCaseStudyId === undefined || editingCaseStudy !== undefined ? (
-            <CaseStudyForm
-              caseStudy={editingCaseStudy ?? undefined}
-              onSuccess={handleCaseStudyFormSuccess}
-              onCancel={() => setCaseStudyFormOpen(false)}
-            />
-          ) : (
-            <div className="h-48 animate-pulse rounded-lg bg-white/[0.02]" />
-          )}
-        </DialogContent>
-      </Dialog>
-
+      {/* --- Proposal Dialog --- */}
       <Dialog open={proposalFormOpen} onOpenChange={setProposalFormOpen}>
         <DialogContent className="bg-[#0c1222] border-white/[0.08] sm:max-w-2xl">
           <DialogHeader>
@@ -274,6 +299,7 @@ export default function DashboardPage() {
         </DialogContent>
       </Dialog>
 
+      {/* --- Template Dialog --- */}
       <Dialog open={templateFormOpen} onOpenChange={setTemplateFormOpen}>
         <DialogContent className="bg-[#0c1222] border-white/[0.08] sm:max-w-4xl">
           <DialogHeader>
@@ -292,153 +318,79 @@ export default function DashboardPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* --- Deal Dialog --- */}
+      <Dialog open={dealFormOpen} onOpenChange={setDealFormOpen}>
+        <DialogContent className="bg-[#0c1222] border-white/[0.08] sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">New Deal</DialogTitle>
+          </DialogHeader>
+          <DealFormWrapper onSuccess={() => setDealFormOpen(false)} />
+        </DialogContent>
+      </Dialog>
+
+      {/* --- Booking Dialog --- */}
+      <Dialog open={bookingFormOpen} onOpenChange={setBookingFormOpen}>
+        <DialogContent className="bg-[#0c1222] border-white/[0.08] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-white">New Booking</DialogTitle>
+          </DialogHeader>
+          <BookingFormWrapper
+            defaultDate={bookingFormDate}
+            onSuccess={() => {
+              setBookingFormOpen(false);
+              setBookingFormDate(undefined);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function BookingTab() {
-  const bookings = useQuery(api.bookings.list, {});
-  const clients = useQuery(api.clients.list, {});
+/* ---- Thin wrappers that lazy-load the form components ---- */
 
-  const clientMap = new Map<string, string>();
-  if (clients) {
-    for (const c of clients) {
-      clientMap.set(c._id, c.name);
-    }
+function DealFormWrapper({ onSuccess }: { onSuccess: () => void }) {
+  // Dynamically import DealForm to keep the main bundle small.
+  const [DealForm, setDealForm] = useState<React.ComponentType<{ onSuccess: () => void }> | null>(null);
+
+  // Lazy-load on mount
+  if (!DealForm) {
+    import("@/components/sales/DealForm").then((mod) => {
+      setDealForm(() => mod.DealForm);
+    });
   }
 
-  return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-white">Bookings</h2>
-        <p className="text-sm text-slate-500">
-          {bookings === undefined
-            ? "Loading..."
-            : `${bookings.length} booking${bookings.length !== 1 ? "s" : ""}`}
-        </p>
-      </div>
-      {bookings === undefined ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-[60px] animate-pulse rounded-lg bg-white/[0.02]" />
-          ))}
-        </div>
-      ) : bookings.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-white/[0.06] text-sm text-slate-600">
-          No bookings yet.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {bookings.map((booking) => (
-            <div
-              key={booking._id}
-              className="flex items-center gap-4 rounded-lg border border-white/[0.06] bg-[#0c1222]/80 px-4 py-3 transition-all duration-150 hover:border-seridian-500/20 hover:bg-[#0c1222]"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-seridian-500/10 text-sm text-seridian-400">
-                ◷
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-slate-200">
-                  {booking.title}
-                </p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {clientMap.get(booking.clientId) ?? "Unknown client"} ·{" "}
-                  {booking.type}
-                </p>
-              </div>
-              <div className="hidden text-right sm:block">
-                <p className="text-xs text-slate-500">
-                  {new Date(booking.startTime).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-                <p className="text-[11px] text-slate-600">
-                  {new Date(booking.startTime).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function SalesTab() {
-  const deals = useQuery(api.deals.list, {});
-  const clients = useQuery(api.clients.list, {});
-
-  const clientMap = new Map<string, string>();
-  if (clients) {
-    for (const c of clients) {
-      clientMap.set(c._id, c.name);
-    }
+  if (!DealForm) {
+    return <div className="h-48 animate-pulse rounded-lg bg-white/[0.02]" />;
   }
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-white">Sales Pipeline</h2>
-        <p className="text-sm text-slate-500">
-          {deals === undefined
-            ? "Loading..."
-            : `${deals.length} deal${deals.length !== 1 ? "s" : ""}`}
-        </p>
-      </div>
-      {deals === undefined ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-[60px] animate-pulse rounded-lg bg-white/[0.02]" />
-          ))}
-        </div>
-      ) : deals.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-white/[0.06] text-sm text-slate-600">
-          No deals yet.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {deals.map((deal) => (
-            <div
-              key={deal._id}
-              className="flex items-center gap-4 rounded-lg border border-white/[0.06] bg-[#0c1222]/80 px-4 py-3 transition-all duration-150 hover:border-seridian-500/20 hover:bg-[#0c1222]"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-slate-200">
-                  {deal.name}
-                </p>
-                <p className="mt-0.5 text-xs text-slate-500">
-                  {clientMap.get(deal.clientId) ?? "Unknown client"} ·{" "}
-                  {deal.stage.replace("_", " ")}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-white tabular-nums">
-                  {formatCurrency(deal.value)}
-                </p>
-                <p className="text-[11px] text-slate-600">
-                  {deal.probability}% prob.
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <DealForm onSuccess={onSuccess} />;
 }
 
+function BookingFormWrapper({
+  defaultDate,
+  onSuccess,
+}: {
+  defaultDate?: string;
+  onSuccess: () => void;
+}) {
+  const [BookingForm, setBookingForm] = useState<React.ComponentType<{ defaultDate?: string; onSuccess: () => void }> | null>(null);
+
+  if (!BookingForm) {
+    import("@/components/bookings/BookingForm").then((mod) => {
+      setBookingForm(() => mod.BookingForm);
+    });
+  }
+
+  if (!BookingForm) {
+    return <div className="h-48 animate-pulse rounded-lg bg-white/[0.02]" />;
+  }
+
+  return <BookingForm defaultDate={defaultDate} onSuccess={onSuccess} />;
+}
+
+/* ---- Small inline SVG icon ---- */
 function FileIcon() {
   return (
     <svg

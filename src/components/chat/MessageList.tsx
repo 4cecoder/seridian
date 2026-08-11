@@ -18,12 +18,8 @@ function formatDate(timestamp: number) {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
-  if (date.toDateString() === today.toDateString()) {
-    return "Today";
-  }
-  if (date.toDateString() === yesterday.toDateString()) {
-    return "Yesterday";
-  }
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -37,10 +33,6 @@ function formatTime(timestamp: number) {
     minute: "2-digit",
     hour12: true,
   });
-}
-
-function getInitial(name: string) {
-  return name.charAt(0).toUpperCase();
 }
 
 function MessageBubble({
@@ -64,7 +56,7 @@ function MessageBubble({
       {showSender && (
         <div className="flex items-center gap-2 mb-0.5">
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-seridian-500/10 text-xs font-semibold text-seridian-400">
-            {getInitial(message.senderName)}
+            {message.senderName.charAt(0).toUpperCase()}
           </div>
           <span className="text-sm font-medium text-slate-200">
             {message.senderName}
@@ -84,12 +76,7 @@ function MessageBubble({
         </div>
       )}
 
-      <div
-        className={cn(
-          "text-sm text-slate-300 leading-relaxed",
-          showSender ? "ml-9" : "ml-9"
-        )}
-      >
+      <div className="ml-9 text-sm text-slate-300 leading-relaxed">
         {message.content}
       </div>
     </div>
@@ -108,8 +95,10 @@ function DateDivider({ date }: { date: string }) {
 
 export function MessageList({ channelId, currentUserId }: MessageListProps) {
   const messages = useQuery(api.messages.listByChannel, { channelId });
+  // Fetch all messages to resolve reply references across channels
   const allMessages = useQuery(api.messages.listAll, {});
 
+  // Build lookup map for reply resolution
   const messageMap = new Map<string, Message>();
   if (allMessages) {
     for (const msg of allMessages) {
@@ -117,6 +106,7 @@ export function MessageList({ channelId, currentUserId }: MessageListProps) {
     }
   }
 
+  // Group messages by date
   const messagesByDate = new Map<string, Message[]>();
   if (messages) {
     for (const msg of messages) {
@@ -163,7 +153,7 @@ export function MessageList({ channelId, currentUserId }: MessageListProps) {
                   const showSender =
                     !prev ||
                     prev.senderId !== msg.senderId ||
-                    msg.createdAt - prev.createdAt > 300000;
+                    msg.createdAt - prev.createdAt > 300_000;
                   const replyToMsg = msg.replyTo
                     ? messageMap.get(msg.replyTo)
                     : undefined;
@@ -172,7 +162,7 @@ export function MessageList({ channelId, currentUserId }: MessageListProps) {
                     <MessageBubble
                       key={msg._id}
                       message={msg}
-                      isOwn={msg.senderId === currentUserId}
+                      isOwn={currentUserId !== undefined && msg.senderId === currentUserId}
                       showSender={showSender}
                       replyToMessage={replyToMsg}
                     />

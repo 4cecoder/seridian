@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
@@ -9,7 +10,7 @@ import { cn } from "@/lib/utils";
 type Issue = Doc<"issues">;
 type Status = Issue["status"];
 
-const columns: { key: Status; label: string; headerColor: string }[] = [
+const COLUMNS: { key: Status; label: string; headerColor: string }[] = [
   {
     key: "backlog",
     label: "Backlog",
@@ -43,24 +44,36 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ onIssueClick }: KanbanBoardProps) {
   const issues = useQuery(api.issues.list, {});
-
   const clients = useQuery(api.clients.list, {});
 
-  const clientMap = new Map<string, string>(
-    (clients ?? []).map((c: Doc<"clients">) => [c._id, c.name])
-  );
+  const clientMap = useMemo(() => {
+    return new Map<Id<"clients">, string>(
+      (clients ?? []).map((c: Doc<"clients">) => [c._id, c.name]),
+    );
+  }, [clients]);
 
-  const issuesByStatus = (status: Status): Issue[] => {
-    if (!issues) return [];
-    return issues
-      .filter((issue: Issue) => issue.status === status)
-      .sort((a: Issue, b: Issue) => a.order - b.order);
-  };
+  const issuesByStatus = useMemo(() => {
+    if (!issues) return {} as Record<Status, Issue[]>;
+    const grouped: Record<Status, Issue[]> = {
+      backlog: [],
+      todo: [],
+      in_progress: [],
+      in_review: [],
+      done: [],
+    };
+    for (const issue of issues) {
+      grouped[issue.status].push(issue);
+    }
+    for (const key of Object.keys(grouped) as Status[]) {
+      grouped[key].sort((a, b) => a.order - b.order);
+    }
+    return grouped;
+  }, [issues]);
 
   return (
     <div className="flex h-[calc(100vh-12rem)] gap-4 overflow-x-auto pb-4">
-      {columns.map((column) => {
-        const columnIssues = issuesByStatus(column.key);
+      {COLUMNS.map((column) => {
+        const columnIssues = issuesByStatus[column.key] ?? [];
 
         return (
           <div
@@ -70,7 +83,7 @@ export function KanbanBoard({ onIssueClick }: KanbanBoardProps) {
             <div
               className={cn(
                 "flex items-center justify-between border-t-2 bg-transparent px-1 pb-3 pt-3",
-                column.headerColor
+                column.headerColor,
               )}
             >
               <div className="flex items-center gap-2">
@@ -78,7 +91,7 @@ export function KanbanBoard({ onIssueClick }: KanbanBoardProps) {
                   {column.label}
                 </h3>
                 <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/5 px-1.5 text-[11px] font-medium text-slate-500 tabular-nums">
-                  {issues ? columnIssues.length : "—"}
+                  {issues === undefined ? "—" : columnIssues.length}
                 </span>
               </div>
             </div>

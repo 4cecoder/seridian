@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
 import { Badge, Button, Skeleton } from "@bytecats/ui-kit";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 type Proposal = Doc<"proposals">;
 
-const statusConfig: Record<
+const STATUS_CONFIG: Record<
   Proposal["status"],
   { color: string; label: string }
 > = {
@@ -67,7 +67,7 @@ function ProposalRow({
   onEdit?: (id: Id<"proposals">) => void;
   onView?: (id: Id<"proposals">) => void;
 }) {
-  const status = statusConfig[proposal.status];
+  const status = STATUS_CONFIG[proposal.status];
 
   return (
     <div
@@ -137,7 +137,6 @@ function ProposalRow({
 export function ProposalList({ onEdit, onView, onAdd }: ProposalListProps) {
   const proposals = useQuery(api.proposals.list, {});
   const clients = useQuery(api.clients.list, {});
-  const removeProposal = useMutation(api.proposals.remove);
 
   const clientMap = new Map<string, string>();
   if (clients) {

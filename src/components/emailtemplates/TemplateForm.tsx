@@ -40,7 +40,11 @@ interface FormErrors {
   category?: string;
 }
 
-export function TemplateForm({ template, onSuccess, onCancel }: TemplateFormProps) {
+export function TemplateForm({
+  template,
+  onSuccess,
+  onCancel,
+}: TemplateFormProps) {
   const createTemplate = useMutation(api.emailTemplates.create);
   const updateTemplate = useMutation(api.emailTemplates.update);
 
@@ -98,18 +102,24 @@ export function TemplateForm({ template, onSuccess, onCancel }: TemplateFormProp
 
     setSubmitting(true);
     try {
-      const payload = {
-        name: name.trim(),
-        subject: subject.trim(),
-        body: body.trim(),
-        category: category as EmailTemplate["category"],
-        variables,
-      };
-
       if (template) {
-        await updateTemplate({ templateId: template._id, ...payload });
+        await updateTemplate({
+          templateId: template._id,
+          name: name.trim(),
+          subject: subject.trim(),
+          body: body.trim(),
+          category: category as EmailTemplate["category"],
+          variables,
+        });
       } else {
-        await createTemplate(payload);
+        await createTemplate({
+          name: name.trim(),
+          subject: subject.trim(),
+          body: body.trim(),
+          category: category as EmailTemplate["category"],
+          variables,
+          createdBy: "current-user",
+        });
       }
       onSuccess?.();
     } catch {
@@ -194,7 +204,7 @@ export function TemplateForm({ template, onSuccess, onCancel }: TemplateFormProp
               id="tpl-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Dear {{client_name}},&#10;&#10;Thank you for your interest..."
+              placeholder={"Dear {{client_name}},\n\nThank you for your interest..."}
               rows={10}
               className={cn(
                 "bg-white/[0.03] border-white/[0.08] text-slate-200 placeholder:text-slate-600 focus:border-seridian-500/40 focus:ring-seridian-500/20 resize-none font-mono text-xs",
@@ -250,7 +260,12 @@ export function TemplateForm({ template, onSuccess, onCancel }: TemplateFormProp
 
       <div className="flex items-center justify-end gap-2 pt-2">
         {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={submitting}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onCancel}
+            disabled={submitting}
+          >
             Cancel
           </Button>
         )}

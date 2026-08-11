@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 type Proposal = Doc<"proposals">;
 
-const statusConfig: Record<
+const STATUS_CONFIG: Record<
   Proposal["status"],
   { color: string; label: string }
 > = {
@@ -59,7 +59,9 @@ interface ProposalCardProps {
 export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) {
   const proposal = useQuery(api.proposals.get, { proposalId });
   const clients = useQuery(api.clients.list, {});
-  const updateProposal = useMutation(api.proposals.update);
+  const sendProposal = useMutation(api.proposals.send);
+  const acceptProposal = useMutation(api.proposals.accept);
+  const rejectProposal = useMutation(api.proposals.reject);
 
   const clientName = proposal?.clientId
     ? clients?.find((c) => c._id === proposal.clientId)?.name
@@ -82,10 +84,18 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
     );
   }
 
-  const status = statusConfig[proposal.status];
+  const status = STATUS_CONFIG[proposal.status];
 
-  async function handleStatusChange(newStatus: Proposal["status"]) {
-    await updateProposal({ proposalId, status: newStatus });
+  async function handleSend() {
+    await sendProposal({ proposalId });
+  }
+
+  async function handleAccept() {
+    await acceptProposal({ proposalId });
+  }
+
+  async function handleReject() {
+    await rejectProposal({ proposalId });
   }
 
   return (
@@ -107,7 +117,7 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
           <Button
             type="button"
             size="sm"
-            onClick={() => handleStatusChange("sent")}
+            onClick={handleSend}
           >
             Send Proposal
           </Button>
@@ -119,7 +129,7 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
               size="sm"
               variant="ghost"
               className="text-green-400 hover:text-green-300"
-              onClick={() => handleStatusChange("accepted")}
+              onClick={handleAccept}
             >
               Accept
             </Button>
@@ -128,7 +138,7 @@ export function ProposalCard({ proposalId, onBack, onEdit }: ProposalCardProps) 
               size="sm"
               variant="ghost"
               className="text-red-400 hover:text-red-300"
-              onClick={() => handleStatusChange("rejected")}
+              onClick={handleReject}
             >
               Reject
             </Button>

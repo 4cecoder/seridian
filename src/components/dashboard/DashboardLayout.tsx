@@ -154,7 +154,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
       </div>
 
-      <footer className="flex items-center justify-between border-t border-white/5 bg-[#0c1222] px-4 py-2 text-xs text-slate-500 lg:pl-[240px]">
+      <footer className="flex items-center justify-between border-t border-white/[0.06] bg-[#0c1222] px-4 py-2 text-xs text-slate-500 lg:pl-[240px]">
         <div className="flex items-center gap-4">
           <span>{pageName}</span>
           <span className="text-white/10">|</span>
@@ -165,10 +165,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <span>${pipelineValue.toLocaleString()} pipeline</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            Convex connected
-          </span>
+          <StatusIndicator />
+          <NotificationBell />
+          <span className="text-white/10">|</span>
           <span>Seridian v0.1.0</span>
         </div>
       </footer>

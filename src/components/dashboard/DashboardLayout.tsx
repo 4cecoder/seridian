@@ -9,6 +9,8 @@ import { Sidebar } from "./Sidebar";
 import { MobileNav } from "@/components/ui/MobileNav";
 import { SearchCommand } from "@/components/ui/SearchCommand";
 import { ShortcutsDialog } from "./ShortcutsDialog";
+import { StatusIndicator } from "./StatusIndicator";
+import { NotificationBell } from "./NotificationBell";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

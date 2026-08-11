@@ -1,0 +1,46 @@
+# Sync with: action `gh label sync` or https://github.com/marketplace/actions/github-label-sync
+# Mirrors Linear labels (team SER, project Seridian Site Refresh) + CI labels from pr.yml
+
+# Tracks — must match Linear labels track:*
+- name: "track:ui-kit"
+  color: "06b6d4"
+  description: "Frontend track ui-kit — @bytecats/ui-kit + Astryx tokens (SER)"
+- name: "track:webgl"
+  color: "22d3ee"
+  description: "Frontend track WebGL — immersive hero / canvas (SER)"
+- name: "track:fonts"
+  color: "a5f3fc"
+  description: "Frontend track fonts — next/font/display swap (SER)"
+- name: "track:workflow"
+  color: "6366f1"
+  description: "Workflow / infra — Linear + GitHub tandem, CI, worktrees (SER)"
+
+# Type — mirrors Linear type:*
+- name: "type:feature"
+  color: "0e7490"
+  description: "Feature — maps to Linear type:feature"
+- name: "type:bug"
+  color: "d73a4a"
+  description: "Bug — maps to Linear type:bug"
+- name: "type:chore"
+  color: "fef2c0"
+  description: "Chore / housekeeping"
+
+# Priority — mirrors Linear priority
+- name: "priority:high"
+  color: "b60205"
+  description: "High priority (Linear priority:high)"
+- name: "priority:medium"
+  color: "fbca04"
+  description: "Medium priority"
+- name: "priority:low"
+  color: "0e8a16"
+  description: "Low priority"
+
+# CI — set by .github/workflows/pr.yml
+- name: "ci:passed"
+  color: "0e8a16"
+  description: "CI passed — lint/typecheck/build green (bun)"
+- name: "ci:failed"
+  color: "b60205"
+  description: "CI failed"

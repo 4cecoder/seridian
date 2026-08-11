@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Badge, Button } from "@bytecats/ui-kit";
 
 const navLinks = [
   { href: "#services", label: "Services" },
@@ -19,9 +20,15 @@ export function Header() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-seridian-400 to-seridian-600">
             <span className="text-sm font-bold text-slate-950">S</span>
           </div>
-          <span className="text-lg font-semibold tracking-tight text-white">
+          <span className="font-display text-lg font-semibold tracking-tight text-white">
             Seridian
           </span>
+          <Badge
+            variant="secondary"
+            className="hidden border-seridian-500/20 bg-seridian-500/10 text-seridian-300 sm:inline-flex"
+          >
+            Consulting
+          </Badge>
         </a>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -34,22 +41,25 @@ export function Header() {
               {link.label}
             </a>
           ))}
-          <a
-            href="#contact"
-            className="rounded-lg bg-seridian-500 px-4 py-2 text-sm font-medium text-slate-950 transition-colors hover:bg-seridian-400"
+          <Button
+            asChild
+            size="sm"
+            className="rounded-lg bg-seridian-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-seridian-400"
           >
-            Get in touch
-          </a>
+            <a href="#contact">Get in touch</a>
+          </Button>
         </nav>
 
-        <button
+        <Button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 md:hidden"
+          variant="ghost"
+          size="icon"
+          className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white md:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
           <svg
-            className="h-5 w-5 text-slate-300"
+            className="h-5 w-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -61,7 +71,7 @@ export function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             )}
           </svg>
-        </button>
+        </Button>
       </div>
 
       {mobileOpen && (
@@ -77,13 +87,13 @@ export function Header() {
                 {link.label}
               </a>
             ))}
-            <a
-              href="#contact"
-              className="rounded-lg bg-seridian-500 px-4 py-2.5 text-center text-sm font-medium text-slate-950"
+            <Button
+              asChild
+              className="rounded-lg bg-seridian-500 px-4 py-2.5 text-center text-sm font-medium text-slate-950 hover:bg-seridian-400"
               onClick={() => setMobileOpen(false)}
             >
-              Get in touch
-            </a>
+              <a href="#contact">Get in touch</a>
+            </Button>
           </div>
         </nav>
       )}

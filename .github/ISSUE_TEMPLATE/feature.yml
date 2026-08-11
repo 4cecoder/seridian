@@ -1,0 +1,59 @@
+name: Feature request
+description: Propose a feature — create Linear SER issue first, then mirror here
+title: "feat: "
+labels: ["type:feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Tandem workflow:** `linear_create_issue` (official MCP `https://mcp.linear.app/mcp`) → `gh issue create` with `Linear: SER-X` in body. See `docs/LINEAR_GITHUB_WORKFLOW.md`.
+  - type: input
+    id: linear
+    attributes:
+      label: Linear issue
+      description: Linear identifier and URL
+      placeholder: "SER-13 — https://linear.app/seridian/issue/SER-13"
+    validations:
+      required: true
+  - type: dropdown
+    id: track
+    attributes:
+      label: Track
+      options:
+        - track:ui-kit
+        - track:webgl
+        - track:fonts
+        - track:workflow
+      default: 0
+    validations:
+      required: true
+  - type: input
+    id: worktree
+    attributes:
+      label: Worktree path
+      description: Dedicated worktree for this feature
+      placeholder: "/tmp/wt-feature-xyz  (git worktree add /tmp/wt-feature-xyz -b feature/xyz main)"
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What should be built? Reference ui-kit / WebGL / fonts as needed.
+      placeholder: "As a ... I want ... so that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: ac
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] `bun run lint` passes
+        - [ ] `bunx tsc --noEmit` passes
+        - [ ] `bun run build` succeeds
+        - [ ] No CLS regression, fonts display:swap, prefers-reduced-motion respected
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / links
+      description: Figma, Linear project (Seridian Site Refresh), related PRs

@@ -1,3 +1,5 @@
+import { Badge, Card, CardContent, CardHeader, CardTitle } from "@bytecats/ui-kit";
+
 const technologies = [
   {
     category: "Cloud Platforms",
@@ -30,38 +32,46 @@ export function Expertise() {
     <section id="expertise" className="border-t border-white/5 bg-slate-925 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-medium uppercase tracking-wider text-seridian-400">
+          <Badge
+            variant="secondary"
+            className="border-seridian-500/20 bg-seridian-500/10 text-seridian-400 uppercase tracking-wider"
+          >
             Expertise
-          </p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
+          </Badge>
+          <h2 className="font-display mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
             Technology we work with
           </h2>
           <p className="mt-4 text-slate-400">
-            Deep experience across the modern cloud and application stack.
-            We choose the right tools for your context — not whatever is trending.
+            Deep experience across the modern cloud and application stack. We choose
+            the right tools for your context — not whatever is trending.
           </p>
         </div>
 
         <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {technologies.map((group) => (
-            <div
+            <Card
               key={group.category}
-              className="card-glow rounded-xl border border-white/5 bg-slate-850/30 p-6"
+              className="card-glow rounded-xl border-white/5 bg-slate-850/30 p-6"
             >
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-seridian-400">
-                {group.category}
-              </h3>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {group.items.map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-md border border-white/5 bg-white/5 px-3 py-1.5 text-sm text-slate-300"
-                  >
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
+              <CardHeader className="p-0">
+                <CardTitle className="font-mono text-sm font-semibold uppercase tracking-wider text-seridian-400">
+                  {group.category}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 pt-4">
+                <div className="flex flex-wrap gap-2">
+                  {group.items.map((item) => (
+                    <Badge
+                      key={item}
+                      variant="secondary"
+                      className="rounded-md border-white/5 bg-white/5 px-3 py-1.5 font-mono text-sm text-slate-300 hover:bg-white/10"
+                    >
+                      {item}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

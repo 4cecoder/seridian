@@ -9,7 +9,7 @@ export function Footer() {
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-seridian-400 to-seridian-600">
               <span className="text-xs font-bold text-slate-950">S</span>
             </div>
-            <span className="text-sm font-semibold text-white">Seridian</span>
+            <span className="font-display text-sm font-semibold text-white">Seridian</span>
           </div>
 
           <p className="text-sm text-slate-500">

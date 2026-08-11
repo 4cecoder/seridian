@@ -7,8 +7,8 @@ Professional consulting website for **Seridian** — cloud infrastructure and ap
 Install dependencies and run the development server:
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -56,5 +56,5 @@ src/
 Pushes to `main` automatically deploy via Netlify. To deploy manually from the CLI:
 
 ```bash
-npx netlify-cli deploy --prod --build
+bunx netlify deploy --prod --build
 ```

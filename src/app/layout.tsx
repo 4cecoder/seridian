@@ -5,6 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@bytecats/ui-kit";
+import { DashboardFooterHide } from "@/components/dashboard/DashboardFooterHide";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -62,7 +63,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased">
         <Header />
         <main>{children}</main>
-        <Footer />
+        <DashboardFooterHide>
+          <Footer />
+        </DashboardFooterHide>
         <Toaster position="top-right" richColors />
       </body>
     </html>

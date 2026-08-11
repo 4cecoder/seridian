@@ -158,11 +158,103 @@ async function getProjectId(
   return resolveProjectId(token, owner, projectNumber);
 }
 
+type StatusFieldOption = { id: string; name: string };
+type StatusField = { fieldId: string; options: StatusFieldOption[] };
+
+async function getProjectStatusField(
+  token: string,
+  projectId: string
+): Promise<{ ok: true; field: StatusField } | { ok: false; error: string }> {
+  const query = `
+    query ProjectStatusField($projectId: ID!) {
+      node(id: $projectId) {
+        ... on ProjectV2 {
+          field(name: "Status") {
+            ... on ProjectV2SingleSelectField {
+              id
+              options {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const result = await githubGraphQL<{
+    node?: {
+      field?: { id?: string; options?: { id?: string; name?: string }[] } | null;
+    } | null;
+  }>(token, query, { projectId });
+
+  if (!result.ok) return result;
+
+  const field = result.data.node?.field;
+  if (!field?.id) {
+    return { ok: false, error: "Status field not found on GitHub project" };
+  }
+
+  const options: StatusFieldOption[] = (field.options ?? [])
+    .filter((o): o is StatusFieldOption => Boolean(o.id && o.name))
+    .map((o) => ({ id: o.id!, name: o.name! }));
+
+  return { ok: true, field: { fieldId: field.id, options } };
+}
+
+function matchStatusOption(
+  options: StatusFieldOption[],
+  statusName: string
+): StatusFieldOption | null {
+  const normalized = statusName.trim().toLowerCase();
+  return options.find((o) => o.name.trim().toLowerCase() === normalized) ?? null;
+}
+
+async function setProjectItemStatus(
+  token: string,
+  projectId: string,
+  itemId: string,
+  fieldId: string,
+  optionId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const mutation = `
+    mutation SetProjectItemStatus(
+      $projectId: ID!
+      $itemId: ID!
+      $fieldId: ID!
+      $optionId: String!
+    ) {
+      updateProjectV2ItemFieldValue(
+        input: {
+          projectId: $projectId
+          itemId: $itemId
+          fieldId: $fieldId
+          value: { singleSelectOptionId: $optionId }
+        }
+      ) {
+        projectV2Item { id }
+      }
+    }
+  `;
+
+  const result = await githubGraphQL<{
+    updateProjectV2ItemFieldValue?: { projectV2Item?: { id?: string } | null } | null;
+  }>(token, mutation, { projectId, itemId, fieldId, optionId });
+
+  if (!result.ok) return result;
+  if (!result.data.updateProjectV2ItemFieldValue?.projectV2Item?.id) {
+    return { ok: false, error: "GitHub did not update the project item status" };
+  }
+
+  return { ok: true };
+}
+
 async function addIssueToProject(
   token: string,
   projectId: string,
   contentId: string
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; itemId: string } | { ok: false; error: string }> {
   const mutation = `
     mutation AddProjectItem($projectId: ID!, $contentId: ID!) {
       addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
@@ -176,11 +268,40 @@ async function addIssueToProject(
   }>(token, mutation, { projectId, contentId });
 
   if (!result.ok) return result;
-  if (!result.data.addProjectV2ItemById?.item?.id) {
+
+  const itemId = result.data.addProjectV2ItemById?.item?.id;
+  if (!itemId) {
     return { ok: false, error: "GitHub did not add the issue to the project" };
   }
 
-  return { ok: true };
+  return { ok: true, itemId };
+}
+
+async function assignProjectItemStatus(
+  token: string,
+  projectId: string,
+  itemId: string,
+  statusName: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const fieldResult = await getProjectStatusField(token, projectId);
+  if (!fieldResult.ok) return fieldResult;
+
+  const option = matchStatusOption(fieldResult.field.options, statusName);
+  if (!option) {
+    const available = fieldResult.field.options.map((o) => o.name).join(", ");
+    return {
+      ok: false,
+      error: `Status "${statusName}" not found. Available: ${available || "(none)"}`,
+    };
+  }
+
+  return setProjectItemStatus(
+    token,
+    projectId,
+    itemId,
+    fieldResult.field.fieldId,
+    option.id
+  );
 }
 
 /**
@@ -256,6 +377,23 @@ export async function createGitHubIssue({
         addResult.error,
         `(issue #${issue.number})`
       );
+    } else {
+      const statusName = process.env.GITHUB_PROJECT_STATUS?.trim();
+      if (statusName) {
+        const statusResult = await assignProjectItemStatus(
+          token,
+          projectResult.projectId,
+          addResult.itemId,
+          statusName
+        );
+        if (!statusResult.ok) {
+          console.error(
+            "[github] Issue added to project but status update failed:",
+            statusResult.error,
+            `(issue #${issue.number})`
+          );
+        }
+      }
     }
   } else {
     console.error("[github] Issue created but project not configured:", projectResult.error);

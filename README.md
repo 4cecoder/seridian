@@ -80,6 +80,7 @@ Submissions from the contact form create a **GitHub issue** and add it to a **Gi
 | `GITHUB_REPO` | Yes | Repository for new issues, e.g. `therodfather/seridian` |
 | `GITHUB_PROJECT_NUMBER` | One of* | Project number from the project URL (see below) |
 | `GITHUB_PROJECT_ID` | One of* | GraphQL node ID for the project (alternative to number) |
+| `GITHUB_PROJECT_STATUS` | Recommended | Status column label for new items (see below) |
 
 \* Set either `GITHUB_PROJECT_NUMBER` or `GITHUB_PROJECT_ID`. If both are set, `GITHUB_PROJECT_ID` wins.
 
@@ -109,12 +110,37 @@ Copy `.env.example` → `.env.local` for local development.
 
 To use the GraphQL node ID instead, run the `projectV2` query in [GitHub's GraphQL Explorer](https://docs.github.com/en/graphql/overview/explorer) and set `GITHUB_PROJECT_ID`.
 
+### Setting the Status column
+
+GitHub Projects v2 boards use a **Status** single-select field for columns. Adding an issue via the API does not set Status — items land in the first option (usually **Todo**) unless you configure `GITHUB_PROJECT_STATUS`.
+
+Set `GITHUB_PROJECT_STATUS` to the **exact label** shown on your project board for the target column (e.g. `Inbox`, `Triage`, `New leads`). Matching is case-insensitive.
+
+**How to find column names:** open your project board and read the Status column headers — use those labels exactly. To list options via GraphQL, run this in the [GraphQL Explorer](https://docs.github.com/en/graphql/overview/explorer) (replace `therodfather` and `1` if needed):
+
+```graphql
+query {
+  user(login: "therodfather") {
+    projectV2(number: 1) {
+      field(name: "Status") {
+        ... on ProjectV2SingleSelectField {
+          options { name }
+        }
+      }
+    }
+  }
+}
+```
+
+For org-owned projects, use `organization(login: "ORG")` instead of `user(login: "...")`.
+
 ### Netlify (production + deploy previews)
 
 ```bash
 npx netlify-cli env:set GITHUB_TOKEN "ghp_..." --context production --context deploy-preview
 npx netlify-cli env:set GITHUB_REPO "therodfather/seridian" --context production --context deploy-preview
 npx netlify-cli env:set GITHUB_PROJECT_NUMBER "1" --context production --context deploy-preview
+npx netlify-cli env:set GITHUB_PROJECT_STATUS "YourColumnName" --context production --context deploy-preview
 ```
 
 Remove legacy Linear vars if they are still set:

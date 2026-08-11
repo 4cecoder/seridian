@@ -45,3 +45,17 @@
 - Do not add `npm`-generated lockfiles or run `npm install` — it drifts from `bun.lock`.
 - Do not move or rebuild `vendor/ui-kit/dist/` — Netlify/CI need the committed artifacts.
 - Tailwind v4 uses `@import "tailwindcss"` + `@theme` in `globals.css`, not `tailwind.config.*`.
+
+<!-- convex-ai-start -->
+
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read
+`convex/_generated/ai/guidelines.md` first** for important guidelines on
+how to correctly use Convex APIs and patterns. The file contains rules that
+override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running
+`npx convex ai-files install`.
+
+<!-- convex-ai-end -->

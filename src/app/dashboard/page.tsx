@@ -27,6 +27,7 @@ import { FileManager } from "@/components/files/FileManager";
 import { BookingCalendar } from "@/components/bookings/BookingCalendar";
 import { PipelineBoard } from "@/components/sales/PipelineBoard";
 import { LoginScreen } from "@/components/auth/LoginScreen";
+import { SyncDashboard } from "@/components/sync/SyncDashboard";
 
 function getStoredUser() {
   if (typeof window === "undefined") return null;
@@ -184,6 +185,10 @@ export default function DashboardPage() {
             <span aria-hidden="true">⌂</span>
             Overview
           </TabsTrigger>
+          <TabsTrigger value="sync" className="gap-1 px-3 py-1.5 text-xs">
+            <span aria-hidden="true">↻</span>
+            Sync
+          </TabsTrigger>
           <TabsTrigger value="issues" className="gap-1 px-3 py-1.5 text-xs">
             <span aria-hidden="true">☐</span>
             Issues
@@ -216,6 +221,10 @@ export default function DashboardPage() {
 
         <TabsContent value="overview" className="mt-3">
           <BusinessOverview />
+        </TabsContent>
+
+        <TabsContent value="sync" className="mt-3">
+          <SyncDashboard />
         </TabsContent>
 
         <TabsContent value="issues" className="mt-3">

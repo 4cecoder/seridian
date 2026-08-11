@@ -131,8 +131,8 @@ async function seed() {
   await client.mutation(api.bookings.create, {
     title: "Acme Kickoff",
     clientId: client1,
-    startDateTime: new Date(Date.now() + 86400000).toISOString(),
-    endDateTime: new Date(Date.now() + 86400000 + 3600000).toISOString(),
+    startTime: new Date(Date.now() + 86400000).toISOString(),
+    endTime: new Date(Date.now() + 86400000 + 3600000).toISOString(),
     type: "consultation",
   });
 

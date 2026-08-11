@@ -117,4 +117,43 @@ export default defineSchema({
     .index("by_stage", ["stage"])
     .index("by_clientId", ["clientId"])
     .index("by_stage_and_clientId", ["stage", "clientId"]),
+
+  channels: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    type: v.union(v.literal("public"), v.literal("private"), v.literal("direct")),
+    createdBy: v.string(),
+    participants: v.array(v.string()),
+    lastMessageAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_type", ["type"])
+    .index("by_createdBy", ["createdBy"]),
+
+  messages: defineTable({
+    channelId: v.id("channels"),
+    senderId: v.string(),
+    senderName: v.string(),
+    content: v.string(),
+    type: v.union(v.literal("text"), v.literal("system"), v.literal("command")),
+    replyTo: v.optional(v.id("messages")),
+    editedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_channelId_and_createdAt", ["channelId", "createdAt"])
+    .index("by_senderId", ["senderId"]),
+
+  users: defineTable({
+    pubkey: v.string(),
+    name: v.string(),
+    avatar: v.optional(v.string()),
+    status: v.union(v.literal("online"), v.literal("offline"), v.literal("away")),
+    lastSeen: v.number(),
+    deviceType: v.optional(
+      v.union(v.literal("web"), v.literal("android"), v.literal("ios")),
+    ),
+  })
+    .index("by_pubkey", ["pubkey"])
+    .index("by_status", ["status"]),
 });

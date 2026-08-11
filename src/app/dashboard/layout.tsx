@@ -1,5 +1,6 @@
 import { ConvexClientProvider } from "../ConvexClientProvider";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { NotificationProvider } from "@/components/dashboard/NotificationProvider";
 import { QueryProvider } from "../QueryProvider";
 
 export default function DashboardRootLayout({
@@ -10,7 +11,9 @@ export default function DashboardRootLayout({
   return (
     <QueryProvider>
       <ConvexClientProvider>
-        <DashboardLayout>{children}</DashboardLayout>
+        <NotificationProvider>
+          <DashboardLayout>{children}</DashboardLayout>
+        </NotificationProvider>
       </ConvexClientProvider>
     </QueryProvider>
   );

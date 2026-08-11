@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "@/components/ui/MobileNav";
 import { SearchCommand } from "@/components/ui/SearchCommand";
+import { ShortcutsDialog } from "./ShortcutsDialog";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -25,25 +27,42 @@ const routeNames: Record<string, string> = {
   sync: "Sync",
 };
 
+/** Number keys 1-9 map to these section slugs in order. */
+const sectionByNumber: Record<string, string> = {
+  "1": "overview",
+  "2": "issues",
+  "3": "clients",
+  "4": "bookings",
+  "5": "sales",
+  "6": "proposals",
+  "7": "templates",
+  "8": "files",
+  "9": "chat",
+};
+
+/** Context-aware "new item" routes per section. */
+const newRoutes: Record<string, string> = {
+  overview: "/dashboard/issues",
+  issues: "/dashboard/issues",
+  clients: "/dashboard/clients",
+  bookings: "/dashboard/bookings",
+  sales: "/dashboard/sales",
+  proposals: "/dashboard/proposals",
+  templates: "/dashboard/templates",
+  files: "/dashboard/files",
+  chat: "/dashboard/chat",
+};
+
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const router = useRouter();
   const pathname = usePathname();
 
   const clients = useQuery(api.clients.list, {});
   const issues = useQuery(api.issues.list, {});
   const deals = useQuery(api.deals.list, {});
-
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
 
   const segments = pathname.split("/").filter(Boolean);
   const currentSection = segments[1] || "overview";
@@ -52,6 +71,55 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const activeClients = clients?.filter((c) => c.status === "active").length ?? 0;
   const openIssues = issues?.filter((i) => i.status !== "done").length ?? 0;
   const pipelineValue = deals?.reduce((sum, d) => sum + (d.value || 0), 0) ?? 0;
+
+  // Navigation via number keys — only fires when no input is focused
+  const handleNumberNav = useCallback(
+    (key: string) => {
+      const section = sectionByNumber[key];
+      if (section) router.push(`/dashboard${section === "overview" ? "" : `/${section}`}`);
+    },
+    [router],
+  );
+
+  // Context-aware new-item action
+  const handleNewItem = useCallback(() => {
+    const target = newRoutes[currentSection] || "/dashboard";
+    router.push(target);
+    // Dispatch event so section components can open their form
+    window.dispatchEvent(new CustomEvent("seridian:new-item", { detail: { section: currentSection } }));
+  }, [currentSection, router]);
+
+  // Close any open modal on Escape
+  const handleEscape = useCallback(() => {
+    if (shortcutsOpen) setShortcutsOpen(false);
+    else if (searchOpen) setSearchOpen(false);
+    else if (mobileNavOpen) setMobileNavOpen(false);
+  }, [shortcutsOpen, searchOpen, mobileNavOpen]);
+
+  useKeyboardShortcuts(
+    useMemo(
+      () => [
+        // Cmd+K — open search
+        { key: "k", ctrl: true, action: () => setSearchOpen(true), description: "Open search", category: "Navigation" },
+        // Cmd+/ — toggle shortcuts dialog
+        { key: "/", ctrl: true, action: () => setShortcutsOpen((o) => !o), description: "Keyboard shortcuts", category: "Navigation" },
+        // Cmd+N — context-aware new item
+        { key: "n", ctrl: true, action: handleNewItem, description: "New item", category: "Actions" },
+        // Escape — close topmost open panel
+        { key: "Escape", action: handleEscape, description: "Close dialog", category: "General" },
+        // ? — show shortcuts (no modifier, only when no input is focused)
+        { key: "?", action: () => setShortcutsOpen(true), description: "Show shortcuts", category: "General" },
+        // 1-9 — quick navigate to sections
+        ...Object.entries(sectionByNumber).map(([key, section]) => ({
+          key,
+          action: () => handleNumberNav(key),
+          description: `Go to ${routeNames[section]}`,
+          category: "Navigation",
+        })),
+      ],
+      [handleEscape, handleNewItem, handleNumberNav],
+    ),
+  );
 
   return (
     <div className="flex h-screen flex-col bg-slate-950">
@@ -106,6 +174,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </footer>
 
       <SearchCommand open={searchOpen} onOpenChange={setSearchOpen} />
+      <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </div>
   );
 }

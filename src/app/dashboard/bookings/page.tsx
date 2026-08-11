@@ -3,7 +3,6 @@
 import { useState, lazy, Suspense } from "react";
 import { BookingCalendar } from "@/components/bookings/BookingCalendar";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Skeleton } from "@bytecats/ui-kit";
 
 const BookingForm = lazy(() =>
@@ -23,10 +22,6 @@ export default function BookingsPage() {
 
   return (
     <DashboardGuard>
-      <PageHeader
-        title="Bookings"
-        description="Schedule and manage appointments"
-      />
       <BookingCalendar onDayClick={handleDayClick} />
 
       {formOpen && (

@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@bytecats/ui-k
 import { TemplateList } from "@/components/emailtemplates/TemplateList";
 import { TemplateForm } from "@/components/emailtemplates/TemplateForm";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default function TemplatesPage() {
   const [formOpen, setFormOpen] = useState(false);
@@ -36,10 +35,6 @@ export default function TemplatesPage() {
 
   return (
     <DashboardGuard>
-      <PageHeader
-        title="Email Templates"
-        description="Manage reusable email templates"
-      />
       <TemplateList onAdd={handleAdd} onEdit={handleEdit} />
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

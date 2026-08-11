@@ -151,7 +151,18 @@ function SalesPageContent({
   if (viewingDealId) {
     return (
       <div className="flex flex-col gap-4">
-        <PageHeader user={user} onLogout={onLogout} />
+        <div className="flex items-center justify-end gap-3">
+          <div className="hidden items-center gap-2 sm:flex">
+            <span className="text-sm font-medium text-white">{user.name}</span>
+            <span className="text-xs text-slate-500">({user.pubkey})</span>
+          </div>
+          <button
+            onClick={onLogout}
+            className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
         <DealDetail
           dealId={viewingDealId}
           onBack={() => setViewingDealId(null)}
@@ -182,7 +193,18 @@ function SalesPageContent({
   /* -- Board view -- */
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader user={user} onLogout={onLogout} />
+      <div className="flex items-center justify-end gap-3">
+        <div className="hidden items-center gap-2 sm:flex">
+          <span className="text-sm font-medium text-white">{user.name}</span>
+          <span className="text-xs text-slate-500">({user.pubkey})</span>
+        </div>
+        <button
+          onClick={onLogout}
+          className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          Sign out
+        </button>
+      </div>
 
       {/* Stats bar */}
       <StatsBar stats={stats} />
@@ -214,41 +236,6 @@ function SalesPageContent({
           )}
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Page header                                                        */
-/* ------------------------------------------------------------------ */
-
-function PageHeader({
-  user,
-  onLogout,
-}: {
-  user: { pubkey: string; name: string };
-  onLogout: () => void;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-lg font-semibold text-white">Sales Pipeline</h1>
-        <p className="text-xs text-slate-500">
-          Manage deals and track conversion through each stage.
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-2 sm:flex">
-          <span className="text-sm font-medium text-white">{user.name}</span>
-          <span className="text-xs text-slate-500">({user.pubkey})</span>
-        </div>
-        <button
-          onClick={onLogout}
-          className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
-        >
-          Sign out
-        </button>
-      </div>
     </div>
   );
 }

@@ -3,125 +3,138 @@
 import { useState, useCallback } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "convex/_generated/api";
-import { LinearSyncSection } from "./LinearSyncSection";
-import { GitHubSyncSection } from "./GitHubSyncSection";
+import { Tabs, TabsList, TabsTrigger, TabsContent, Button, Badge } from "@bytecats/ui-kit";
+import { SyncCw, GitBranch, Layers, CheckCircle, AlertCircle, Clock } from "lucide-react";
+import { LinearSyncSection } from "@/components/sync/LinearSyncSection";
+import { GitHubSyncSection } from "@/components/sync/GitHubSyncSection";
 
 export function SyncDashboard() {
+  const [activeTab, setActiveTab] = useState("linear");
   const linearStats = useQuery(api.linearIngest.getLinearStats);
   const githubStats = useQuery(api.githubIngest.getGitHubStats);
   const syncLinear = useAction(api.linearSync.syncAllLinear);
   const syncGitHub = useAction(api.githubSync.syncAllGitHub);
+  const [syncingLinear, setSyncingLinear] = useState(false);
+  const [syncingGitHub, setSyncingGitHub] = useState(false);
   const [syncingAll, setSyncingAll] = useState(false);
-  const [lastSyncResult, setLastSyncResult] = useState<string | null>(null);
+  const [lastResult, setLastResult] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const linearConnected = !!process.env.NEXT_PUBLIC_LINEAR_API_KEY || linearStats !== undefined;
-  const githubConnected = !!process.env.NEXT_PUBLIC_GITHUB_TOKEN || githubStats !== undefined;
+  const linearIssues = linearStats?.totalIssues ?? 0;
+  const linearTeams = linearStats?.totalTeams ?? 0;
+  const linearProjects = linearStats?.totalProjects ?? 0;
+  const githubIssues = githubStats?.totalIssues ?? 0;
+  const githubProjects = githubStats?.totalProjects ?? 0;
+
+  const handleSyncLinear = useCallback(async () => {
+    setSyncingLinear(true);
+    setLastResult(null);
+    try {
+      await syncLinear({});
+      setLastResult({ type: "success", message: "Linear synced successfully" });
+    } catch (err) {
+      setLastResult({ type: "error", message: err instanceof Error ? err.message : "Linear sync failed" });
+    } finally {
+      setSyncingLinear(false);
+    }
+  }, [syncLinear]);
+
+  const handleSyncGitHub = useCallback(async () => {
+    setSyncingGitHub(true);
+    setLastResult(null);
+    try {
+      await syncGitHub({});
+      setLastResult({ type: "success", message: "GitHub synced successfully" });
+    } catch (err) {
+      setLastResult({ type: "error", message: err instanceof Error ? err.message : "GitHub sync failed" });
+    } finally {
+      setSyncingGitHub(false);
+    }
+  }, [syncGitHub]);
 
   const handleSyncAll = useCallback(async () => {
     setSyncingAll(true);
-    setLastSyncResult(null);
+    setLastResult(null);
     try {
-      const [linearResult, githubResult] = await Promise.allSettled([
-        syncLinear({}),
-        syncGitHub({}),
-      ]);
-
-      const parts: string[] = [];
-      if (linearResult.status === "fulfilled") {
-        const r = linearResult.value as { issues?: { created: number; updated: number } };
-        parts.push(
-          `Linear: ${r.issues?.created ?? 0} new, ${r.issues?.updated ?? 0} updated`,
-        );
-      } else {
-        parts.push(`Linear: ${linearResult.reason instanceof Error ? linearResult.reason.message : "failed"}`);
-      }
-
-      if (githubResult.status === "fulfilled") {
-        const r = githubResult.value as { issues: { created: number; updated: number }; projects: { created: number; updated: number } };
-        parts.push(
-          `GitHub: ${r.issues.created + r.projects.created} new, ${r.issues.updated + r.projects.updated} updated`,
-        );
-      } else {
-        parts.push(`GitHub: ${githubResult.reason instanceof Error ? githubResult.reason.message : "failed"}`);
-      }
-
-      setLastSyncResult(parts.join(" | "));
+      await Promise.all([syncLinear({}), syncGitHub({})]);
+      setLastResult({ type: "success", message: "All services synced" });
     } catch (err) {
-      setLastSyncResult(err instanceof Error ? err.message : "Sync failed");
+      setLastResult({ type: "error", message: err instanceof Error ? err.message : "Sync failed" });
     } finally {
       setSyncingAll(false);
     }
   }, [syncLinear, syncGitHub]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-white">Sync Management</h1>
-          <p className="text-sm text-slate-500">
-            Synchronize data from external services
-          </p>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <SyncCw className="h-5 w-5 text-slate-400" />
+          <span className="text-sm text-slate-400">
+            {linearIssues + githubIssues} issues synced
+          </span>
+          <span className="text-white/10">|</span>
+          <span className="text-sm text-slate-400">
+            {linearTeams + linearProjects + githubProjects} projects
+          </span>
         </div>
-        <button
-          type="button"
+        <Button
           onClick={handleSyncAll}
           disabled={syncingAll}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-seridian-500 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-seridian-400 disabled:cursor-not-allowed disabled:opacity-50 shrink-0"
+          size="sm"
+          className="bg-seridian-500 text-white hover:bg-seridian-400"
         >
           {syncingAll ? (
-            <>
-              <svg
-                className="h-4 w-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-              Syncing All...
-            </>
+            <SyncCw className="mr-2 h-3.5 w-3.5 animate-spin" />
           ) : (
-            <>
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              Sync All
-            </>
+            <SyncCw className="mr-2 h-3.5 w-3.5" />
           )}
-        </button>
+          Sync All
+        </Button>
       </div>
 
-      {lastSyncResult && (
-        <div className="rounded-lg border border-seridian-500/20 bg-seridian-500/10 px-4 py-3 text-sm text-seridian-400">
-          {lastSyncResult}
+      {lastResult && (
+        <div
+          className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+            lastResult.type === "success"
+              ? "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+              : "border border-red-500/20 bg-red-500/10 text-red-400"
+          }`}
+        >
+          {lastResult.type === "success" ? (
+            <CheckCircle className="h-4 w-4 shrink-0" />
+          ) : (
+            <AlertCircle className="h-4 w-4 shrink-0" />
+          )}
+          {lastResult.message}
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <LinearSyncSection />
-        <GitHubSyncSection />
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList variant="line" className="gap-1">
+          <TabsTrigger value="linear" className="gap-2 text-xs">
+            <Layers className="h-3.5 w-3.5" />
+            Linear
+            <Badge variant="secondary" className="ml-1 text-[10px]">
+              {linearIssues}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="github" className="gap-2 text-xs">
+            <GitBranch className="h-3.5 w-3.5" />
+            GitHub
+            <Badge variant="secondary" className="ml-1 text-[10px]">
+              {githubIssues}
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="linear" className="mt-4">
+          <LinearSyncSection onSync={handleSyncLinear} syncing={syncingLinear} />
+        </TabsContent>
+
+        <TabsContent value="github" className="mt-4">
+          <GitHubSyncSection onSync={handleSyncGitHub} syncing={syncingGitHub} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -29,7 +29,7 @@ const steps = [
 
 export function Approach() {
   return (
-    <section id="approach" className="py-24">
+    <section id="approach" className="border-t border-white/5 bg-slate-950 py-24">
       <div className="mx-auto max-w-6xl px-6">
         <div className="grid items-start gap-16 lg:grid-cols-2">
           <div>
@@ -55,7 +55,7 @@ export function Approach() {
             {steps.map((step) => (
               <Card
                 key={step.number}
-                className="card-glow flex flex-row gap-5 rounded-xl border-white/5 bg-slate-850/30 p-6 transition-all"
+                className="card-glow flex flex-row gap-5 rounded-xl border-white/5 bg-slate-850/50 p-6 text-slate-300 ring-white/5 transition-all hover:border-seridian-500/20"
               >
                 <span className="font-mono text-2xl font-bold text-seridian-500/40">{step.number}</span>
                 <CardContent className="p-0">

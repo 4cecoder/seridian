@@ -97,9 +97,9 @@ export function Contact() {
   }
 
   return (
-    <section id="contact" className="py-24" aria-labelledby="contact-heading">
+    <section id="contact" className="border-t border-white/5 bg-slate-950 py-24" aria-labelledby="contact-heading">
       <div className="mx-auto max-w-6xl px-6">
-        <Card className="relative overflow-hidden rounded-2xl border-seridian-500/20 bg-gradient-to-br from-slate-850 to-slate-925 p-0">
+        <Card className="card-glow relative overflow-hidden rounded-2xl border border-seridian-500/20 bg-slate-925 bg-gradient-to-br from-slate-850 to-slate-925 p-0 text-slate-300 ring-white/5">
           <div className="glow-orb absolute -right-32 -top-32 h-96 w-96 pointer-events-none" aria-hidden />
           <div className="glow-orb absolute -bottom-32 -left-32 h-96 w-96 pointer-events-none" aria-hidden />
 
@@ -181,7 +181,7 @@ export function Contact() {
                   aria-describedby={fieldErrors.name ? "contact-name-error" : undefined}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full border-white/10 bg-slate-950/50 text-white placeholder:text-slate-600 focus-visible:border-seridian-500/50 focus-visible:ring-seridian-500/50"
+                  className="w-full border-white/10 bg-slate-950/80 text-white shadow-none placeholder:text-slate-500 focus-visible:border-seridian-500/50 focus-visible:ring-seridian-500/50"
                   placeholder="Your name"
                 />
                 {fieldErrors.name && (
@@ -205,7 +205,7 @@ export function Contact() {
                   aria-describedby={fieldErrors.email ? "contact-email-error" : undefined}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border-white/10 bg-slate-950/50 text-white placeholder:text-slate-600 focus-visible:border-seridian-500/50 focus-visible:ring-seridian-500/50"
+                  className="w-full border-white/10 bg-slate-950/80 text-white shadow-none placeholder:text-slate-500 focus-visible:border-seridian-500/50 focus-visible:ring-seridian-500/50"
                   placeholder="you@company.com"
                 />
                 {fieldErrors.email && (
@@ -229,7 +229,7 @@ export function Contact() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   maxLength={2000}
-                  className="w-full resize-none border-white/10 bg-slate-950/50 text-white placeholder:text-slate-600 focus-visible:border-seridian-500/50 focus-visible:ring-seridian-500/50"
+                  className="w-full resize-none border-white/10 bg-slate-950/80 text-white shadow-none placeholder:text-slate-500 focus-visible:border-seridian-500/50 focus-visible:ring-seridian-500/50"
                   placeholder="Tell us about your project or challenge..."
                 />
                 <div className="mt-1 flex justify-between">

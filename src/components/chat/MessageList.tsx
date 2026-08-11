@@ -34,7 +34,7 @@ function formatDate(timestamp: number) {
 function formatTime(timestamp: number) {
   return new Date(timestamp).toLocaleTimeString("en-US", {
     hour: "numeric",
-    minute: " H:mm",
+    minute: "2-digit",
     hour12: true,
   });
 }

@@ -6,8 +6,9 @@ export const listByChannel = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("messages")
-      .withIndex("by_channelId", (q) => q.eq("channelId", args.channelId))
-      .collect();
+      .withIndex("by_channelId_and_createdAt", (q) => q.eq("channelId", args.channelId))
+      .order("asc")
+      .take(500);
   },
 });
 

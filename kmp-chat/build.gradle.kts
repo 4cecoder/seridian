@@ -27,9 +27,22 @@ kotlin {
                 implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.3")
             }
         }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+            }
+        }
         val androidMain by getting {
             dependencies {
                 implementation("io.ktor:ktor-client-okhttp:3.0.3")
+            }
+        }
+        val androidUnitTest by getting {
+            dependencies {
+                implementation("junit:junit:4.13.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
             }
         }
     }

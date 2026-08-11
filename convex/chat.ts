@@ -4,17 +4,16 @@ import { query, mutation } from "./_generated/server";
 export const listChannels = query({
   args: { pubkey: v.string() },
   handler: async (ctx, args) => {
-    const channels = await ctx.db
+    const owned = await ctx.db
       .query("channels")
-      .filter((q) =>
-        q.or(
-          q.eq(q.field("createdBy"), args.pubkey),
-          q.arrayContains(q.field("participants"), args.pubkey),
-        ),
-      )
-      .order("desc")
-      .take(500);
-    return channels;
+      .withIndex("by_createdBy", (q) => q.eq("createdBy", args.pubkey))
+      .collect();
+    const all = await ctx.db.query("channels").collect();
+    const joined = all.filter((c) =>
+      c.participants.includes(args.pubkey) && c.createdBy !== args.pubkey
+    );
+    const merged = [...owned, ...joined];
+    return merged.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
@@ -28,26 +27,14 @@ export const getChannel = query({
 export const listMessages = query({
   args: {
     channelId: v.id("channels"),
-    cursor: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, args) => {
-    const pageSize = 50;
-    let q = ctx.db
+    const messages = await ctx.db
       .query("messages")
       .withIndex("by_channelId_and_createdAt", (q) => q.eq("channelId", args.channelId))
-      .order("desc");
-
-    if (args.cursor) {
-      q = q.filter((q) => q.lt(q.field("createdAt"), args.cursor!));
-    }
-
-    const messages = await q.take(pageSize);
-    return {
-      messages,
-      nextCursor: messages.length === pageSize
-        ? messages[messages.length - 1].createdAt
-        : null,
-    };
+      .order("asc")
+      .take(500);
+    return messages;
   },
 });
 

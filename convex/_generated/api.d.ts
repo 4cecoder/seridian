@@ -10,11 +10,15 @@
 
 import type * as bookings from "../bookings.js";
 import type * as caseStudies from "../caseStudies.js";
+import type * as channels from "../channels.js";
+import type * as chat from "../chat.js";
 import type * as clients from "../clients.js";
 import type * as contracts from "../contracts.js";
 import type * as deals from "../deals.js";
 import type * as issues from "../issues.js";
 import type * as linearSync from "../linearSync.js";
+import type * as messages from "../messages.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -25,11 +29,15 @@ import type {
 declare const fullApi: ApiFromModules<{
   bookings: typeof bookings;
   caseStudies: typeof caseStudies;
+  channels: typeof channels;
+  chat: typeof chat;
   clients: typeof clients;
   contracts: typeof contracts;
   deals: typeof deals;
   issues: typeof issues;
   linearSync: typeof linearSync;
+  messages: typeof messages;
+  users: typeof users;
 }>;
 
 /**

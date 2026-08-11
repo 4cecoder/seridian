@@ -129,6 +129,37 @@ h3 {
     0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
+/* 404 page animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out both;
+}
+
 .webgl-hero {
   background: #070b14;
   contain: strict;
@@ -141,6 +172,13 @@ h3 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-pulse-glow,
+  .animate-fade-in-up {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   .webgl-hero canvas {
     transition: none !important;
   }

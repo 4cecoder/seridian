@@ -17,14 +17,14 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-body",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 export const metadata: Metadata = {

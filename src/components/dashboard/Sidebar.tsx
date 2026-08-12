@@ -77,6 +77,7 @@ function NavLink({ item, isActive, collapsed }: { item: NavItem; isActive: boole
           : "text-slate-400 hover:bg-white/[0.05] hover:text-white",
         collapsed && "justify-center px-2",
       )}
+      aria-current={isActive ? "page" : undefined}
       title={collapsed ? item.label : undefined}
     >
       <Icon className="h-[18px] w-[18px] shrink-0" />

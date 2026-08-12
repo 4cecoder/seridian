@@ -135,6 +135,15 @@ export default defineSchema({
     value: v.string(),
   }).index("by_key", ["key"]),
 
+  secrets: defineTable({
+    name: v.string(),
+    maskedValue: v.string(),
+    description: v.optional(v.string()),
+    category: v.union(v.literal("linear"), v.literal("github"), v.literal("convex"), v.literal("other")),
+    updatedBy: v.string(),
+    updatedAt: v.number(),
+  }).index("by_name", ["name"]),
+
   caseStudies: defineTable({
     title: v.string(),
     clientId: v.optional(v.id("clients")),

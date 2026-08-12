@@ -120,8 +120,8 @@ export function SecretsVault({ currentUserId = "d" }: { currentUserId?: string }
               <Key className="w-3.5 h-3.5 text-cyan-400" />
               Update Value for <span className="font-mono text-cyan-300">{selectedSecret}</span>
             </Label>
-            <span className="text-[11px] text-amber-400/90 font-medium flex items-center gap-1">
-              <Lock className="w-3 h-3 text-amber-400" /> Write-Only: Original key cannot be retrieved once saved
+            <span className="text-[11px] text-amber-400/90 font-medium">
+              🔒 Write-Only: Original key cannot be retrieved once saved
             </span>
           </div>
 

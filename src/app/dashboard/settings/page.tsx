@@ -1,19 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
-import { Button, Input, Label, Dialog, DialogContent, DialogHeader, DialogTitle, Badge, Skeleton } from "@bytecats/ui-kit";
-import { Settings, Users, UserPlus, Trash2, Mail, Shield, Clock } from "lucide-react";
+import {
+  Button,
+  Input,
+  Label,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Badge,
+  Skeleton,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@bytecats/ui-kit";
+import { Settings, Users, UserPlus, Trash2, Mail, Shield, Clock, RefreshCw, Layers, GitBranch, Bot } from "lucide-react";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
+import { SyncDashboard } from "@/components/sync/SyncDashboard";
 
 type User = Doc<"users">;
-
-const ROLE_CONFIG: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-  admin: { label: "Admin", color: "bg-seridian-500/15 text-seridian-400 border-seridian-500/20", icon: Shield },
-  member: { label: "Member", color: "bg-blue-500/15 text-blue-400 border-blue-500/20", icon: Users },
-};
 
 function UserCard({ user, onEdit, onDelete }: { user: User; onEdit: (user: User) => void; onDelete: (userId: Id<"users">) => void }) {
   const statusColors: Record<string, string> = {
@@ -120,9 +131,12 @@ function UserForm({ user, onClose }: { user?: User; onClose: () => void }) {
   );
 }
 
-export default function SettingsPage() {
+function SettingsContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
   const users = useQuery(api.chat.getUsers, {});
   const deleteUser = useMutation(api.users.remove);
+  const [activeTab, setActiveTab] = useState(tabParam || "users");
   const [formOpen, setFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>();
   const [deleteConfirmId, setDeleteConfirmId] = useState<Id<"users"> | null>(null);
@@ -144,35 +158,122 @@ export default function SettingsPage() {
   }
 
   return (
-    <DashboardGuard>
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Settings className="h-5 w-5 text-slate-400" aria-hidden="true" />
-            <span className="text-sm text-slate-400">{users?.length ?? 0} users</span>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+        <div className="flex items-center gap-3">
+          <Settings className="h-6 w-6 text-cyan-400" aria-hidden="true" />
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">System Settings & Governance</h1>
+            <p className="text-xs text-slate-400 mt-0.5">Manage user access, organization roles, and Linear/GitHub integration sync.</p>
           </div>
-          <Button size="sm" onClick={() => setFormOpen(true)} className="bg-seridian-500 text-white hover:bg-seridian-400">
-            <UserPlus className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
-            Add User
-          </Button>
-        </div>
-
-        <div className="space-y-2">
-          {users === undefined ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-xl" />
-            ))
-          ) : users.length === 0 ? (
-            <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/[0.06] text-sm text-slate-600">
-              No users yet. Add one to get started.
-            </div>
-          ) : (
-            users.map((user) => (
-              <UserCard key={user._id} user={user} onEdit={handleEdit} onDelete={setDeleteConfirmId} />
-            ))
-          )}
         </div>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList variant="line" className="gap-2 border-b border-white/[0.08]">
+          <TabsTrigger value="users" className="gap-2 text-xs font-medium">
+            <Users className="h-4 w-4" />
+            Team Members & Access
+            <Badge variant="secondary" className="ml-1 text-[10px] bg-white/10 text-white">
+              {users?.length ?? 0}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="sync" className="gap-2 text-xs font-medium">
+            <RefreshCw className="h-4 w-4" />
+            Integrations & Data Sync
+            <Badge variant="secondary" className="ml-1 text-[10px] bg-cyan-500/20 text-cyan-300">
+              Linear + GitHub
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="agents" className="gap-2 text-xs font-medium">
+            <Bot className="h-4 w-4 text-cyan-400" />
+            AI Agent Studio
+            <Badge variant="secondary" className="ml-1 text-[10px] bg-purple-500/20 text-purple-300">
+              3 Agents
+            </Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* TAB 1: USERS */}
+        <TabsContent value="users" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-400">Registered organization members</span>
+            <Button size="sm" onClick={() => setFormOpen(true)} className="bg-cyan-500 text-black hover:bg-cyan-400 font-semibold">
+              <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              Add User
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {users === undefined ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 rounded-xl" />
+              ))
+            ) : users.length === 0 ? (
+              <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-white/[0.06] text-sm text-slate-600">
+                No users yet. Add one to get started.
+              </div>
+            ) : (
+              users.map((user) => (
+                <UserCard key={user._id} user={user} onEdit={handleEdit} onDelete={setDeleteConfirmId} />
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        {/* TAB 2: INTEGRATIONS & SYNC */}
+        <TabsContent value="sync" className="space-y-4 pt-2">
+          <div className="rounded-xl border border-white/[0.08] bg-[#0c1222]/80 p-6 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-white">External Integrations Sync Center</h3>
+              <p className="text-xs text-slate-400 mt-1">Configure and manually trigger synchronization with Linear issues, teams, projects, and GitHub repositories.</p>
+            </div>
+            <SyncDashboard />
+          </div>
+        </TabsContent>
+
+        {/* TAB 3: AI AGENT STUDIO */}
+        <TabsContent value="agents" className="space-y-4 pt-2">
+          <div className="rounded-xl border border-white/[0.08] bg-[#0c1222]/80 p-6 space-y-6">
+            <div>
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Bot className="h-4 w-4 text-cyan-400" />
+                AI Agent Studio & Automation Hub
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">Configure workspace orchestration agents, triggers, API connections, and automated notification webhooks.</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">@SeridianAI</span>
+                  <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-300">Active</Badge>
+                </div>
+                <div className="text-sm font-semibold text-white">Architect Agent</div>
+                <p className="text-xs text-slate-400 leading-relaxed">Orchestrates multi-agent subtasks, codebase queries, layout optimization, and workflow planning.</p>
+              </div>
+
+              <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">@LinearSyncBot</span>
+                  <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-300">Active</Badge>
+                </div>
+                <div className="text-sm font-semibold text-white">Sprint Orchestrator</div>
+                <p className="text-xs text-slate-400 leading-relaxed">Syncs Linear tickets, creates issues from chat threads, updates labels, and tracks sprint velocity.</p>
+              </div>
+
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">@DataPulse</span>
+                  <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-300">Active</Badge>
+                </div>
+                <div className="text-sm font-semibold text-white">Analytics Bot</div>
+                <p className="text-xs text-slate-400 leading-relaxed">Monitors sales pipelines, client dossier background checks, booking rates, and team bandwidth.</p>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <UserForm user={editingUser} onClose={handleClose} />
@@ -190,6 +291,16 @@ export default function SettingsPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <DashboardGuard>
+      <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
+        <SettingsContent />
+      </Suspense>
     </DashboardGuard>
   );
 }

@@ -37,7 +37,6 @@ const navItems: NavItem[] = [
   { href: "/dashboard/proposals", label: "Proposals", icon: FileText, group: "business" },
   { href: "/dashboard/templates", label: "Templates", icon: Mail, group: "tools" },
   { href: "/dashboard/files", label: "Files", icon: Folder, group: "tools" },
-  { href: "/dashboard/sync", label: "Sync", icon: RefreshCw, group: "tools" },
   { href: "/dashboard/chat", label: "Chat", icon: MessageSquare, group: "tools" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, group: "tools" },
 ];

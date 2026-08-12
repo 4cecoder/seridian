@@ -148,7 +148,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <main
           id="main-content"
           className={cn(
-            "flex-1 overflow-y-auto transition-all duration-300 ease-in-out",
+            "flex-1 transition-all duration-300 ease-in-out",
+            pathname.startsWith("/dashboard/chat") ? "overflow-hidden" : "overflow-y-auto",
             sidebarCollapsed ? "lg:pl-[60px]" : "lg:pl-[240px]",
           )}
         >
@@ -169,32 +170,38 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="ml-3 text-sm font-medium text-white">{pageName}</span>
           </div>
 
-          <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
-            {children}
-          </div>
+          {pathname.startsWith("/dashboard/chat") ? (
+            <div className="h-[calc(100vh-2.5rem)] w-full overflow-hidden">
+              {children}
+            </div>
+          ) : (
+            <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
+              {children}
+            </div>
+          )}
         </main>
       </div>
 
       <footer
         role="contentinfo"
         className={cn(
-          "flex items-center justify-between border-t border-white/[0.06] bg-[#0c1222] px-4 py-2 text-xs text-slate-500 transition-all duration-300 ease-in-out",
-          sidebarCollapsed ? "lg:pl-[60px]" : "lg:pl-[240px]",
+          "relative z-30 flex items-center justify-between border-t border-white/[0.06] bg-[#0c1222] px-6 py-2 text-xs text-slate-400 transition-all duration-300 ease-in-out shrink-0",
+          sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[256px]",
         )}>
-        <div className="flex items-center gap-4">
-          <span>{pageName}</span>
+        <div className="flex items-center gap-3 overflow-x-auto whitespace-nowrap">
+          <span className="font-semibold text-slate-200">{pageName}</span>
           <span className="text-white/10">|</span>
           <span>{activeClients} active clients</span>
-          <span className="text-white/10">|</span>
-          <span>{openIssues} open issues</span>
-          <span className="text-white/10">|</span>
-          <span>${pipelineValue.toLocaleString()} pipeline</span>
+          <span className="text-white/10 hidden sm:inline">|</span>
+          <span className="hidden sm:inline">{openIssues} open issues</span>
+          <span className="text-white/10 hidden md:inline">|</span>
+          <span className="hidden md:inline">${pipelineValue.toLocaleString()} pipeline</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0 ml-4">
           <StatusIndicator />
           <NotificationBell />
           <span className="text-white/10">|</span>
-          <span>Seridian v0.1.0</span>
+          <span className="font-mono text-[11px] text-slate-500">v0.1.0</span>
         </div>
       </footer>
 

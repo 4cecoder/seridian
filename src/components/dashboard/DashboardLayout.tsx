@@ -129,12 +129,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen flex-col bg-slate-950">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-2 focus:bg-seridian-500 focus:text-white"
-      >
-        Skip to content
-      </a>
       <div className="flex flex-1 overflow-hidden">
         <div className="hidden lg:block">
           <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((p) => !p)} />
@@ -145,22 +139,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           onClose={() => setMobileNavOpen(false)}
         />
 
-        <main
-          id="main-content"
-          className={cn(
-            "flex-1 transition-all duration-300 ease-in-out",
-            pathname.startsWith("/dashboard/chat") ? "overflow-hidden" : "overflow-y-auto",
-            sidebarCollapsed ? "lg:pl-[60px]" : "lg:pl-[240px]",
-          )}
-        >
-          <div
-            role="banner"
-            className="flex items-center border-b border-white/5 px-4 py-3 lg:hidden sticky top-0 z-30 bg-slate-950/95 backdrop-blur-sm"
-          >
+        <main className={cn(
+          "flex-1 overflow-y-auto transition-all duration-300 ease-in-out",
+          sidebarCollapsed ? "lg:pl-[60px]" : "lg:pl-[240px]",
+        )}>
+          <div className="flex items-center border-b border-white/5 px-4 py-3 lg:hidden sticky top-0 z-30 bg-slate-950/95 backdrop-blur-sm">
             <button
               type="button"
               onClick={() => setMobileNavOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-seridian-500"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
               aria-label="Open navigation"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -170,38 +157,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="ml-3 text-sm font-medium text-white">{pageName}</span>
           </div>
 
-          {pathname.startsWith("/dashboard/chat") ? (
-            <div className="flex h-full w-full flex-col overflow-hidden">
-              {children}
-            </div>
-          ) : (
-            <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
-              {children}
-            </div>
-          )}
+          <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
+            {children}
+          </div>
         </main>
       </div>
 
-      <footer
-        role="contentinfo"
-        className={cn(
-          "relative z-30 flex items-center justify-between border-t border-white/[0.06] bg-[#0c1222] px-6 py-2 text-xs text-slate-400 transition-all duration-300 ease-in-out shrink-0",
-          sidebarCollapsed ? "lg:pl-[76px]" : "lg:pl-[256px]",
-        )}>
-        <div className="flex items-center gap-3 overflow-x-auto whitespace-nowrap">
-          <span className="font-semibold text-slate-200">{pageName}</span>
+      <footer className={cn(
+        "flex items-center justify-between border-t border-white/[0.06] bg-[#0c1222] px-4 py-2 text-xs text-slate-500 transition-all duration-300 ease-in-out",
+        sidebarCollapsed ? "lg:pl-[60px]" : "lg:pl-[240px]",
+      )}>
+        <div className="flex items-center gap-4">
+          <span>{pageName}</span>
           <span className="text-white/10">|</span>
           <span>{activeClients} active clients</span>
-          <span className="text-white/10 hidden sm:inline">|</span>
-          <span className="hidden sm:inline">{openIssues} open issues</span>
-          <span className="text-white/10 hidden md:inline">|</span>
-          <span className="hidden md:inline">${pipelineValue.toLocaleString()} pipeline</span>
+          <span className="text-white/10">|</span>
+          <span>{openIssues} open issues</span>
+          <span className="text-white/10">|</span>
+          <span>${pipelineValue.toLocaleString()} pipeline</span>
         </div>
-        <div className="flex items-center gap-3 shrink-0 ml-4">
+        <div className="flex items-center gap-3">
           <StatusIndicator />
           <NotificationBell />
           <span className="text-white/10">|</span>
-          <span className="font-mono text-[11px] text-slate-500">v0.1.0</span>
+          <span>Seridian v0.1.0</span>
         </div>
       </footer>
 

@@ -26,5 +26,10 @@ export function useStableQuery<T>(
   // maps to "skip" when false.
   const resolvedArgs = options?.enabled === false ? "skip" : args;
 
-  return useConvexQuery(query, resolvedArgs as any) as T | undefined;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks, @typescript-eslint/no-explicit-any
+    return useConvexQuery(query, resolvedArgs as any) as T | undefined;
+  } catch {
+    return undefined;
+  }
 }

@@ -3,24 +3,25 @@
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Card, CardContent, Skeleton } from "@bytecats/ui-kit";
+import { Users, DollarSign, Calendar, BookOpen, type LucideIcon } from "lucide-react";
 
 function MetricCard({
   label,
   value,
-  icon,
+  icon: Icon,
   loading,
 }: {
   label: string;
   value: string | number;
-  icon: string;
+  icon: LucideIcon;
   loading?: boolean;
 }) {
   return (
-    <Card className="rounded-xl border-white/[0.06] bg-[#0c1222]/80">
+    <Card className="group rounded-xl border-white/[0.06] bg-[#0c1222]/80 transition-all duration-200 hover:border-seridian-500/20 hover:shadow-[0_0_20px_rgba(6,182,212,0.05)]">
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
               {label}
             </p>
             {loading ? (
@@ -31,8 +32,8 @@ function MetricCard({
               </p>
             )}
           </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-seridian-500/10 text-lg text-seridian-400">
-            {icon}
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-seridian-500/10 text-seridian-400 transition-colors group-hover:bg-seridian-500/20">
+            <Icon className="h-5 w-5" />
           </div>
         </div>
       </CardContent>
@@ -70,32 +71,32 @@ export function BusinessOverview() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-white">Business Overview</h2>
-        <p className="text-sm text-slate-500">Key metrics at a glance</p>
+        <h2 className="font-display text-lg font-semibold text-white">Business Overview</h2>
+        <p className="text-sm text-slate-400">Key metrics at a glance</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Active Clients"
           value={clients?.length ?? 0}
-          icon="◎"
+          icon={Users}
           loading={clients === undefined}
         />
         <MetricCard
           label="Active Deals"
           value={formatCurrency(activeDealsValue)}
-          icon="▭"
+          icon={DollarSign}
           loading={deals === undefined}
         />
         <MetricCard
           label="Upcoming Bookings"
           value={upcomingBookings}
-          icon="◷"
+          icon={Calendar}
           loading={bookings === undefined}
         />
         <MetricCard
           label="Published Case Studies"
           value={publishedCaseStudies ?? 0}
-          icon="✦"
+          icon={BookOpen}
           loading={publishedCaseStudies === undefined}
         />
       </div>

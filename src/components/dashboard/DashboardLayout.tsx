@@ -171,7 +171,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {pathname.startsWith("/dashboard/chat") ? (
-            <div className="h-[calc(100vh-2.5rem)] w-full overflow-hidden">
+            <div className="flex h-full w-full flex-col overflow-hidden">
               {children}
             </div>
           ) : (

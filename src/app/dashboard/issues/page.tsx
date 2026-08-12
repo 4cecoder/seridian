@@ -68,6 +68,7 @@ export default function IssuesPage() {
   // Data
   const issues = useQuery(api.issues.list, {});
   const clients = useQuery(api.clients.list, {});
+  const users = useQuery(api.chat.getUsers, {});
   const createIssue = useMutation(api.issues.create);
   const updateIssue = useMutation(api.issues.update);
   const removeIssue = useMutation(api.issues.remove);
@@ -441,16 +442,25 @@ export default function IssuesPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="create-assignee" className="text-xs text-slate-400">
+                <Label className="text-xs text-slate-400">
                   Assignee
                 </Label>
-                <Input
-                  id="create-assignee"
-                  value={formAssignee}
-                  onChange={(e) => setFormAssignee(e.target.value)}
-                  placeholder="Optional"
-                  className="h-9 border-white/[0.08] bg-white/[0.03] text-sm text-white placeholder:text-slate-600"
-                />
+                <Select value={formAssignee} onValueChange={setFormAssignee}>
+                  <SelectTrigger className="h-9 border-white/[0.08] bg-white/[0.03] text-sm text-slate-300">
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0c1222] border-white/[0.08]">
+                    <SelectItem value="_unassigned">Unassigned</SelectItem>
+                    {(users ?? [
+                      { _id: "dee", name: "Dee" },
+                      { _id: "rod", name: "Rod" },
+                    ]).map((u) => (
+                      <SelectItem key={u._id} value={u.name}>
+                        {u.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -617,9 +627,30 @@ export default function IssuesPage() {
                     <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">
                       Assignee
                     </span>
-                    <p className="text-sm text-slate-300">
-                      {detailIssue.assignee || "Unassigned"}
-                    </p>
+                    <Select
+                      value={detailIssue.assignee || "_unassigned"}
+                      onValueChange={(v) => {
+                        updateIssue({
+                          issueId: detailIssue._id,
+                          assignee: v === "_unassigned" ? undefined : v,
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="h-8 border-white/[0.08] bg-white/[0.03] text-xs text-slate-300">
+                        <SelectValue placeholder="Unassigned" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0c1222] border-white/[0.08]">
+                        <SelectItem value="_unassigned">Unassigned</SelectItem>
+                        {(users ?? [
+                          { _id: "dee", name: "Dee" },
+                          { _id: "rod", name: "Rod" },
+                        ]).map((u) => (
+                          <SelectItem key={u._id} value={u.name}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">

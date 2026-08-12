@@ -616,6 +616,15 @@ export const updateSyncMeta = internalMutation({
         value: args.value,
       });
     }
+
+    await ctx.db.insert("auditLogs", {
+      action: "Linear Sync Executed",
+      actor: "LinearSyncBot",
+      details: `Completed sync operation for ${args.key}`,
+      category: "sync",
+      timestamp: Date.now(),
+      metadata: JSON.stringify({ key: args.key, value: args.value }),
+    });
   },
 });
 

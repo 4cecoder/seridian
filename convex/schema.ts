@@ -334,4 +334,40 @@ export default defineSchema({
     avatarUrl: v.optional(v.string()),
     syncedAt: v.number(),
   }).index("by_linearId", ["linearId"]),
+
+  auditLogs: defineTable({
+    action: v.string(),
+    actor: v.string(),
+    details: v.string(),
+    category: v.union(
+      v.literal("secret"),
+      v.literal("user"),
+      v.literal("sync"),
+      v.literal("system")
+    ),
+    timestamp: v.number(),
+    metadata: v.optional(v.string()),
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_category", ["category"]),
+
+  // Real-time Collaborative Document Multiplayer Editing & Presence (Google Docs Style)
+  docPresence: defineTable({
+    fileId: v.id("files"),
+    userPubkey: v.string(),
+    userName: v.string(),
+    cursorPosition: v.number(),
+    activeSelection: v.optional(v.string()),
+    lastSeen: v.number(),
+  })
+    .index("by_fileId", ["fileId"])
+    .index("by_fileId_and_pubkey", ["fileId", "userPubkey"]),
+
+  docEdits: defineTable({
+    fileId: v.id("files"),
+    content: v.string(),
+    lastUpdatedBy: v.string(),
+    updatedAt: v.number(),
+  }).index("by_fileId", ["fileId"]),
 });
+

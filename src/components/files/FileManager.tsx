@@ -4,14 +4,15 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
-import { Button, Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from "@bytecats/ui-kit";
+import { Button, Skeleton, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label } from "@bytecats/ui-kit";
 import { cn } from "@/lib/utils";
 import { FileUpload } from "./FileUpload";
 import {
   Folder, File, FileText, FileImage, FileVideo, FileAudio, FileCode, FileArchive,
-  FileJson, FileSpreadsheet, Presentation, Eye, Download, Trash2, Copy, Info,
-  Grid, List, Search, ChevronRight, Plus, X, Clock, HardDrive, ArrowLeft
+  FileJson, FileSpreadsheet, Presentation, Eye, Download, Trash2, Info,
+  Grid, List, Search, ChevronRight, Plus, X, HardDrive, ArrowLeft, Edit2, FilePlus, Sparkles
 } from "lucide-react";
+import { ConvexFilePreview } from "./ConvexFilePreview";
 
 type FileRecord = Doc<"files">;
 
@@ -20,15 +21,25 @@ const FILE_TYPE_CONFIG: Record<string, { icon: typeof File; color: string; label
   "video/": { icon: FileVideo, color: "text-purple-400 bg-purple-500/10", label: "Video" },
   "audio/": { icon: FileAudio, color: "text-amber-400 bg-amber-500/10", label: "Audio" },
   "application/pdf": { icon: FileText, color: "text-red-400 bg-red-500/10", label: "PDF" },
+  "application/vnd.oasis.opendocument.text": { icon: FileText, color: "text-cyan-400 bg-cyan-500/10", label: "ODT Document" },
+  "application/rtf": { icon: FileText, color: "text-indigo-400 bg-indigo-500/10", label: "RTF Document" },
   "application/zip": { icon: FileArchive, color: "text-yellow-400 bg-yellow-500/10", label: "Archive" },
   "application/json": { icon: FileJson, color: "text-emerald-400 bg-emerald-500/10", label: "JSON" },
-  "text/": { icon: FileText, color: "text-blue-400 bg-blue-500/10", label: "Text" },
+  "text/": { icon: FileText, color: "text-blue-400 bg-blue-500/10", label: "Text / Markdown" },
   "text/html": { icon: FileCode, color: "text-orange-400 bg-orange-500/10", label: "HTML" },
   "text/css": { icon: FileCode, color: "text-cyan-400 bg-cyan-500/10", label: "CSS" },
   "text/javascript": { icon: FileCode, color: "text-yellow-400 bg-yellow-500/10", label: "JavaScript" },
   "application/vnd.openxmlformats-officedocument": { icon: Presentation, color: "text-orange-400 bg-orange-500/10", label: "Document" },
   "spreadsheet": { icon: FileSpreadsheet, color: "text-green-400 bg-green-500/10", label: "Spreadsheet" },
 };
+
+const CREATE_FILE_TEMPLATES = [
+  { id: "odt", name: "Open Document (.odt)", mimeType: "application/vnd.oasis.opendocument.text", extension: ".odt" },
+  { id: "md", name: "Markdown Document (.md)", mimeType: "text/markdown", extension: ".md" },
+  { id: "rtf", name: "Rich Text Format (.rtf)", mimeType: "application/rtf", extension: ".rtf" },
+  { id: "txt", name: "Plain Text (.txt)", mimeType: "text/plain", extension: ".txt" },
+  { id: "json", name: "JSON Data (.json)", mimeType: "application/json", extension: ".json" },
+];
 
 function getFileConfig(mimeType: string) {
   for (const [prefix, config] of Object.entries(FILE_TYPE_CONFIG)) {
@@ -53,8 +64,21 @@ function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
-function isPreviewable(mimeType: string): boolean {
-  return mimeType.startsWith("image/") || mimeType === "application/pdf" || mimeType.startsWith("text/");
+function isPreviewable(mimeType: string, fileName?: string): boolean {
+  if (!mimeType) return false;
+  const name = fileName ? fileName.toLowerCase() : "";
+  return (
+    mimeType.startsWith("image/") ||
+    mimeType === "application/pdf" ||
+    mimeType.startsWith("text/") ||
+    mimeType === "application/json" ||
+    mimeType === "application/vnd.oasis.opendocument.text" ||
+    mimeType === "application/rtf" ||
+    name.endsWith(".md") ||
+    name.endsWith(".txt") ||
+    name.endsWith(".odt") ||
+    name.endsWith(".rtf")
+  );
 }
 
 interface FileManagerProps {
@@ -64,14 +88,26 @@ interface FileManagerProps {
 export function FileManager({ clientId }: FileManagerProps) {
   const [currentFolder, setCurrentFolder] = useState<string | undefined>();
   const [showUpload, setShowUpload] = useState(false);
+  const [showCreateDoc, setShowCreateDoc] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [search, setSearch] = useState("");
   const [selectedFile, setSelectedFile] = useState<FileRecord | null>(null);
   const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<FileRecord | null>(null);
+  const [renameFileItem, setRenameFileItem] = useState<FileRecord | null>(null);
+  const [newFileName, setNewFileName] = useState("");
+
+  // Create Document Form state
+  const [docWizardStep, setDocWizardStep] = useState<1 | 2>(1);
+  const [createTitle, setCreateTitle] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("odt");
+  const [createInitialContent, setCreateInitialContent] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const files = useQuery(api.files.list, { parentId: currentFolder });
   const removeFile = useMutation(api.files.remove);
+  const renameFile = useMutation(api.files.rename);
+  const createDoc = useMutation(api.files.createDocument);
 
   const folders = useMemo(() => files?.filter((f) => f.type === "folder") ?? [], [files]);
   const fileItems = useMemo(() => {
@@ -88,9 +124,58 @@ export function FileManager({ clientId }: FileManagerProps) {
     setSelectedFile(null);
   }, [removeFile]);
 
+  const handleRenameSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renameFileItem || !newFileName.trim()) return;
+    await renameFile({ fileId: renameFileItem._id, name: newFileName.trim() });
+    setRenameFileItem(null);
+    setNewFileName("");
+  };
+
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+
+  const handleCreateDocumentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createTitle.trim()) return;
+    setCreating(true);
+    try {
+      const template = CREATE_FILE_TEMPLATES.find((t) => t.id === selectedTemplateId) || CREATE_FILE_TEMPLATES[0];
+      const finalName = createTitle.endsWith(template.extension) ? createTitle : `${createTitle}${template.extension}`;
+
+      const postUrl = await generateUploadUrl();
+      const content = createInitialContent.trim() || (template.id === "odt" ? "" : `# ${createTitle}\n\nDocument initialized.`);
+      const blob = new Blob([content], { type: template.mimeType });
+
+      const res = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": template.mimeType },
+        body: blob,
+      });
+
+      const { storageId } = await res.json();
+
+      await createDoc({
+        name: finalName,
+        type: template.mimeType,
+        storageId: storageId as Id<"_storage">,
+        size: blob.size,
+        initialContent: content,
+        parentId: currentFolder,
+        clientId,
+        uploadedBy: "Dee",
+      });
+
+      setShowCreateDoc(false);
+      setCreateTitle("");
+      setCreateInitialContent("");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3">
-      {/* Header */}
+      {/* Header & Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <HardDrive className="h-5 w-5 text-slate-400" />
@@ -110,6 +195,12 @@ export function FileManager({ clientId }: FileManagerProps) {
             <button type="button" onClick={() => setViewMode("list")} className={cn("h-6 w-6 flex items-center justify-center rounded text-xs", viewMode === "list" ? "bg-white/10 text-white" : "text-slate-500")}><List className="h-3.5 w-3.5" /></button>
             <button type="button" onClick={() => setViewMode("grid")} className={cn("h-6 w-6 flex items-center justify-center rounded text-xs", viewMode === "grid" ? "bg-white/10 text-white" : "text-slate-500")}><Grid className="h-3.5 w-3.5" /></button>
           </div>
+
+          <Button size="sm" onClick={() => setShowCreateDoc(true)} className="h-7 bg-cyan-500 text-black hover:bg-cyan-400 font-semibold text-xs gap-1">
+            <FilePlus className="h-3.5 w-3.5" />
+            Create Document
+          </Button>
+
           <Button size="sm" onClick={() => setShowUpload(!showUpload)} className="h-7 bg-seridian-500 text-white hover:bg-seridian-400 text-xs">
             {showUpload ? <X className="h-3.5 w-3.5 mr-1" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
             {showUpload ? "Close" : "Upload"}
@@ -159,11 +250,12 @@ export function FileManager({ clientId }: FileManagerProps) {
                   <p className="text-[11px] text-slate-500">{formatBytes(file.size)} · {config.label} · {formatDate(file.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {isPreviewable(file.type) && (
-                    <button type="button" onClick={() => setPreviewFile(file)} className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-white/10"><Eye className="h-3.5 w-3.5" /></button>
+                  {isPreviewable(file.type, file.name) && (
+                    <button type="button" onClick={() => setPreviewFile(file)} className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-white/10" title="Preview / Edit"><Eye className="h-3.5 w-3.5" /></button>
                   )}
-                  <button type="button" onClick={() => setSelectedFile(file)} className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-white/10"><Info className="h-3.5 w-3.5" /></button>
-                  <button type="button" onClick={() => setDeleteConfirm(file)} className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10"><Trash2 className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => { setRenameFileItem(file); setNewFileName(file.name); }} className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10" title="Rename"><Edit2 className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => setSelectedFile(file)} className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-white/10" title="Details"><Info className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => setDeleteConfirm(file)} className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10" title="Delete"><Trash2 className="h-3.5 w-3.5" /></button>
                 </div>
               </div>
             );
@@ -182,7 +274,7 @@ export function FileManager({ clientId }: FileManagerProps) {
             const config = getFileConfig(file.type);
             const Icon = config.icon;
             return (
-              <button key={file._id} type="button" onClick={() => isPreviewable(file.type) ? setPreviewFile(file) : setSelectedFile(file)} className="group flex flex-col items-center gap-2 rounded-lg border border-white/[0.06] bg-[#0c1222]/60 p-4 transition-colors hover:border-white/[0.1]">
+              <button key={file._id} type="button" onClick={() => isPreviewable(file.type, file.name) ? setPreviewFile(file) : setSelectedFile(file)} className="group flex flex-col items-center gap-2 rounded-lg border border-white/[0.06] bg-[#0c1222]/60 p-4 transition-colors hover:border-white/[0.1]">
                 <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl", config.color)}><Icon className="h-6 w-6" /></div>
                 <span className="truncate text-xs text-slate-300 group-hover:text-white w-full text-center">{file.name}</span>
                 <span className="text-[10px] text-slate-600">{formatBytes(file.size)}</span>
@@ -192,27 +284,141 @@ export function FileManager({ clientId }: FileManagerProps) {
         </div>
       )}
 
+      {/* Create Document Multi-Step Wizard Dialog */}
+      <Dialog open={showCreateDoc} onOpenChange={(o) => { setShowCreateDoc(o); if (!o) setDocWizardStep(1); }}>
+        <DialogContent className="max-w-md border-white/[0.08] bg-[#080d1a] shadow-2xl p-6">
+          <DialogHeader className="pb-3 border-b border-white/[0.08]">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-sm font-bold text-white flex items-center gap-2">
+                <FilePlus className="h-4 w-4 text-cyan-400" />
+                {docWizardStep === 1 ? "Select Document Format" : "Document Details & Content"}
+              </DialogTitle>
+              <div className="flex items-center gap-1">
+                <span className={cn("h-2 w-2 rounded-full", docWizardStep === 1 ? "bg-cyan-400" : "bg-slate-600")} />
+                <span className={cn("h-2 w-2 rounded-full", docWizardStep === 2 ? "bg-cyan-400" : "bg-slate-600")} />
+              </div>
+            </div>
+          </DialogHeader>
+
+          <form onSubmit={handleCreateDocumentSubmit} className="py-3 space-y-4">
+            {/* STEP 1: Format Selection */}
+            {docWizardStep === 1 && (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-400">Choose your preferred workspace document format:</p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {CREATE_FILE_TEMPLATES.map((tmpl) => (
+                    <button
+                      key={tmpl.id}
+                      type="button"
+                      onClick={() => setSelectedTemplateId(tmpl.id)}
+                      className={cn(
+                        "flex flex-col justify-between p-3 rounded-xl border text-left text-xs transition-all min-h-[76px]",
+                        selectedTemplateId === tmpl.id
+                          ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300 shadow-md shadow-cyan-950/20"
+                          : "border-white/10 bg-[#070b14] text-slate-400 hover:text-slate-200 hover:border-white/20 hover:bg-white/[0.03]"
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <FileText className={cn("h-4 w-4", selectedTemplateId === tmpl.id ? "text-cyan-400" : "text-slate-500")} />
+                        <span className="font-mono text-[9.5px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400">
+                          {tmpl.extension}
+                        </span>
+                      </div>
+                      <div className="mt-2 font-semibold text-slate-200 truncate">{tmpl.name}</div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-white/[0.08]">
+                  <Button type="button" variant="ghost" onClick={() => setShowCreateDoc(false)} className="text-slate-400 text-xs">Cancel</Button>
+                  <Button type="button" onClick={() => setDocWizardStep(2)} className="bg-cyan-500 text-black hover:bg-cyan-400 font-semibold text-xs gap-1">
+                    Next Step <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Name & Content */}
+            {docWizardStep === 2 && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-300">Document Title *</Label>
+                  <Input
+                    value={createTitle}
+                    onChange={(e) => setCreateTitle(e.target.value)}
+                    placeholder="e.g. Technical_Architecture_Spec"
+                    className="bg-[#070b14] border-white/10 text-xs"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-slate-300">Initial Content (Optional)</Label>
+                  <textarea
+                    value={createInitialContent}
+                    onChange={(e) => setCreateInitialContent(e.target.value)}
+                    placeholder={selectedTemplateId === "odt" ? "ODT files are rich text documents. Leave empty for blank document." : "Type initial document notes or markdown content..."}
+                    rows={4}
+                    className="w-full rounded-lg border border-white/10 bg-[#070b14] p-3 text-xs text-slate-200 focus:border-cyan-500/40 focus:outline-none resize-none font-mono"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center pt-3 border-t border-white/[0.08]">
+                  <Button type="button" variant="ghost" onClick={() => setDocWizardStep(1)} className="text-slate-400 text-xs flex items-center gap-1">
+                    <ArrowLeft className="h-3.5 w-3.5" /> Back
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" onClick={() => setShowCreateDoc(false)} className="text-slate-400 text-xs">Cancel</Button>
+                    <Button type="submit" disabled={creating || !createTitle.trim()} className="bg-cyan-500 text-black hover:bg-cyan-400 font-semibold text-xs">
+                      {creating ? "Creating..." : "Create Document"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename File Dialog */}
+      <Dialog open={renameFileItem !== null} onOpenChange={(o) => !o && setRenameFileItem(null)}>
+        <DialogContent className="max-w-sm border-white/[0.08] bg-[#080d1a]">
+          <DialogHeader>
+            <DialogTitle className="text-white font-bold">Rename File</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRenameSubmit} className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-slate-300">New Filename</Label>
+              <Input
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                className="bg-[#070b14] border-white/10 text-xs"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setRenameFileItem(null)} className="text-slate-400">Cancel</Button>
+              <Button type="submit" disabled={!newFileName.trim()} className="bg-cyan-500 text-black hover:bg-cyan-400 font-semibold text-xs">Save Name</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Preview Dialog */}
       <Dialog open={!!previewFile} onOpenChange={(o) => !o && setPreviewFile(null)}>
         {previewFile && (
-          <DialogContent className="max-w-2xl border-white/[0.06] bg-[#0c1222] p-0 overflow-hidden">
-            <DialogHeader className="px-4 py-3 border-b border-white/[0.06]">
-              <DialogTitle className="text-sm text-white flex items-center gap-2">
-                {(() => { const Icon = getFileConfig(previewFile.type).icon; return <Icon className="h-4 w-4 text-slate-400" />; })()}
+          <DialogContent className="sm:max-w-5xl w-[92vw] max-h-[92vh] border-white/[0.08] bg-[#0c1222] p-0 overflow-hidden shadow-2xl">
+            <DialogHeader className="px-5 py-3 border-b border-white/[0.08] flex items-center justify-between">
+              <DialogTitle className="text-sm font-bold text-white flex items-center gap-2">
+                {(() => { const Icon = getFileConfig(previewFile.type).icon; return <Icon className="h-4 w-4 text-cyan-400" />; })()}
                 {previewFile.name}
               </DialogTitle>
             </DialogHeader>
-            <div className="flex items-center justify-center min-h-[300px] bg-[#070b14] p-4">
-              {previewFile.type.startsWith("image/") ? (
-                <img src={`https://fine-flamingo-162.convex.site/api/storage/${previewFile.storageId}`} alt={previewFile.name} className="max-h-[400px] max-w-full rounded-lg object-contain" />
-              ) : previewFile.type === "application/pdf" ? (
-                <iframe src={`https://fine-flamingo-162.convex.site/api/storage/${previewFile.storageId}`} className="h-[400px] w-full rounded-lg border border-white/10" title={previewFile.name} />
-              ) : (
-                <div className="text-center text-sm text-slate-500">
-                  <FileText className="h-12 w-12 mx-auto mb-2 text-slate-600" />
-                  Preview not available for this file type
-                </div>
-              )}
+            <div className="p-4 bg-[#070b14] flex-1 flex flex-col min-h-[650px] max-h-[80vh]">
+              <ConvexFilePreview
+                fileId={previewFile._id}
+                fileName={previewFile.name}
+                mimeType={previewFile.type}
+              />
             </div>
           </DialogContent>
         )}
@@ -235,7 +441,8 @@ export function FileManager({ clientId }: FileManagerProps) {
               {selectedFile.parentId && <div className="flex justify-between"><span className="text-slate-500">Folder</span><span className="text-slate-300">{selectedFile.parentId}</span></div>}
             </div>
             <div className="flex gap-2 pt-2 border-t border-white/[0.06]">
-              {isPreviewable(selectedFile.type) && <Button size="sm" variant="outline" onClick={() => { setPreviewFile(selectedFile); setSelectedFile(null); }} className="flex-1 border-white/10 text-xs"><Eye className="h-3.5 w-3.5 mr-1" />Preview</Button>}
+              {isPreviewable(selectedFile.type, selectedFile.name) && <Button size="sm" variant="outline" onClick={() => { setPreviewFile(selectedFile); setSelectedFile(null); }} className="flex-1 border-white/10 text-xs"><Eye className="h-3.5 w-3.5 mr-1" />Preview</Button>}
+              <Button size="sm" variant="outline" onClick={() => { setRenameFileItem(selectedFile); setNewFileName(selectedFile.name); setSelectedFile(null); }} className="flex-1 border-white/10 text-xs"><Edit2 className="h-3.5 w-3.5 mr-1" />Rename</Button>
               <Button size="sm" variant="outline" onClick={() => setDeleteConfirm(selectedFile)} className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10 text-xs"><Trash2 className="h-3.5 w-3.5 mr-1" />Delete</Button>
             </div>
           </DialogContent>

@@ -4,6 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
+import { cn } from "@/lib/utils";
+import { useStableQuery } from "@/hooks/useConvexQuery";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Sidebar } from "./Sidebar";
 import { MobileNav } from "@/components/ui/MobileNav";
@@ -60,12 +62,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  const clients = useQuery(api.clients.list, {});
-  const issues = useQuery(api.issues.list, {});
-  const deals = useQuery(api.deals.list, {});
+  const clients = useStableQuery<any[]>(api.clients.list, {});
+  const issues = useStableQuery<any[]>(api.issues.list, {});
+  const deals = useStableQuery<any[]>(api.deals.list, {});
 
   const segments = pathname.split("/").filter(Boolean);
   const currentSection = segments[1] || "overview";
@@ -128,7 +131,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex h-screen flex-col bg-slate-950">
       <div className="flex flex-1 overflow-hidden">
         <div className="hidden lg:block">
-          <Sidebar />
+          <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((p) => !p)} />
         </div>
 
         <MobileNav
@@ -136,7 +139,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           onClose={() => setMobileNavOpen(false)}
         />
 
-        <main className="flex-1 overflow-y-auto lg:pl-[240px]">
+        <main className={cn(
+          "flex-1 overflow-y-auto transition-all duration-300 ease-in-out",
+          sidebarCollapsed ? "lg:pl-[60px]" : "lg:pl-[240px]",
+        )}>
           <div className="flex items-center border-b border-white/5 px-4 py-3 lg:hidden sticky top-0 z-30 bg-slate-950/95 backdrop-blur-sm">
             <button
               type="button"
@@ -157,7 +163,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
       </div>
 
-      <footer className="flex items-center justify-between border-t border-white/[0.06] bg-[#0c1222] px-4 py-2 text-xs text-slate-500 lg:pl-[240px]">
+      <footer className={cn(
+        "flex items-center justify-between border-t border-white/[0.06] bg-[#0c1222] px-4 py-2 text-xs text-slate-500 transition-all duration-300 ease-in-out",
+        sidebarCollapsed ? "lg:pl-[60px]" : "lg:pl-[240px]",
+      )}>
         <div className="flex items-center gap-4">
           <span>{pageName}</span>
           <span className="text-white/10">|</span>

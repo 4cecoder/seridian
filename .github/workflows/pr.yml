@@ -30,7 +30,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Lint
-        run: bun run lint
+        run: bunx eslint src/ --ext .ts,.tsx
 
       - name: Typecheck (tsc --noEmit)
         run: bunx tsc --noEmit
@@ -39,6 +39,7 @@ jobs:
         run: bun run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_CONVEX_URL: "https://fine-flamingo-162.convex.cloud"
 
       - name: Upload build artifact
         if: always()

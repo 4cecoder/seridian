@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useQuery, useMutation } from "convex/react";
@@ -25,9 +25,11 @@ import {
   Undo,
   Redo,
   FileText,
-  Lock,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 import { Button } from "@bytecats/ui-kit";
+import { saveLocal, loadLocal, markSynced } from "@/lib/localDocs";
 
 interface OdtEditorProps {
   fileId: Id<"files">;
@@ -41,13 +43,18 @@ export function OdtEditor({
   currentUserId = "dee",
 }: OdtEditorProps) {
   const storageUrl = useQuery(api.files.getStorageUrl, { fileId });
+  const docContent = useQuery(api.collaboration.getDocumentContent, { fileId });
   const updateDocContent = useMutation(api.collaboration.updateDocumentContent);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "local">("idle");
   const [error, setError] = useState<string | null>(null);
   const [originalBytes, setOriginalBytes] = useState<Uint8Array | null>(null);
+  const [isLocalOnly, setIsLocalOnly] = useState(false);
+  
+  const editorRef = useRef<any>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -57,51 +64,89 @@ export function OdtEditor({
         class: "prose prose-sm prose-invert max-w-none focus:outline-none min-h-[500px] p-6",
       },
     },
+    onUpdate: ({ editor }) => {
+      // Auto-save to local on every change (debounced)
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+      autoSaveTimerRef.current = setTimeout(async () => {
+        const html = editor.getHTML();
+        await saveLocal(fileId, html);
+        setSaveStatus("local");
+      }, 300);
+    },
   });
 
-  // Load and parse ODT file
+  // Load content - priority: local > collaboration doc > original file
   useEffect(() => {
-    if (!storageUrl || !editor) return;
+    if (!editor) return;
 
-    setLoading(true);
-    setError(null);
+    const loadContent = async () => {
+      setLoading(true);
+      setError(null);
 
-    fetch(storageUrl)
-      .then((res) => res.arrayBuffer())
-      .then(async (buffer) => {
+      try {
+        // 1. Try local store first (instant load)
+        const local = await loadLocal(fileId);
+        if (local?.content) {
+          editor.commands.setContent(local.content);
+          setIsLocalOnly(true);
+          setSaveStatus("local");
+          setLoading(false);
+          return;
+        }
+
+        // 2. Try collaboration doc
+        if (docContent?.content) {
+          editor.commands.setContent(docContent.content);
+          // Save to local for future offline access
+          await saveLocal(fileId, docContent.content);
+          setSaveStatus("saved");
+          setLoading(false);
+          return;
+        }
+
+        // 3. Load from original file
+        if (!storageUrl) return;
+
+        const res = await fetch(storageUrl);
+        const buffer = await res.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         setOriginalBytes(bytes);
 
-        // Check if this is actually a ZIP file (valid ODT)
-        // ZIP files start with PK (0x50 0x4B)
+        // Check if valid ZIP (ODT)
         const isZip = bytes[0] === 0x50 && bytes[1] === 0x4B;
 
+        let html: string;
         if (isZip) {
-          // Valid ODT - parse with odf-kit
           const { odtToHtml } = await import("odf-kit/reader");
-          const html = odtToHtml(bytes);
-          editor.commands.setContent(html);
+          html = odtToHtml(bytes);
         } else {
-          // Not a valid ODT (probably stored as text) - load as plain text
-          const textContent = new TextDecoder().decode(bytes);
-          // Convert plain text to HTML paragraphs
-          const html = textContent
+          // Plain text fallback
+          const text = new TextDecoder().decode(bytes);
+          html = text
             .split("\n\n")
             .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
             .join("");
-          editor.commands.setContent(html || "<p></p>");
         }
-        
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to load ODT:", err);
-        setError("Failed to load document. The file may be corrupted.");
-        setLoading(false);
-      });
-  }, [storageUrl, editor]);
 
-  // Save handler - convert TipTap back to ODT
+        editor.commands.setContent(html || "<p></p>");
+        // Save to local for future offline access
+        await saveLocal(fileId, html);
+        setIsLocalOnly(true);
+        setSaveStatus("local");
+      } catch (err) {
+        console.error("Failed to load document:", err);
+        setError("Failed to load document.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [fileId, editor, storageUrl, docContent]);
+
+  // Save to local + sync to Convex
   const handleSave = useCallback(async () => {
     if (!editor || !fileId) return;
 
@@ -109,20 +154,31 @@ export function OdtEditor({
     setSaveStatus("saving");
 
     try {
-      // Save the HTML content to collaboration doc
-      const htmlContent = editor.getHTML();
-      await updateDocContent({
-        fileId,
-        content: htmlContent,
-        userPubkey: currentUserId,
-      });
+      const html = editor.getHTML();
+      
+      // 1. Save to local (instant)
+      await saveLocal(fileId, html);
 
-      setSaveStatus("saved");
+      // 2. Sync to Convex (background)
+      try {
+        await updateDocContent({
+          fileId,
+          content: html,
+          userPubkey: currentUserId,
+        });
+        await markSynced(fileId);
+        setSaveStatus("saved");
+        setIsLocalOnly(false);
+      } catch (syncErr) {
+        // Convex sync failed, but local save succeeded
+        console.warn("Cloud sync failed, saved locally:", syncErr);
+        setSaveStatus("local");
+        setIsLocalOnly(true);
+      }
+
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
-      console.error("Failed to save ODT:", err);
-      setError("Failed to save document.");
-      setSaveStatus("idle");
+      console.error("Failed to save:", err);
     } finally {
       setSaving(false);
     }
@@ -142,11 +198,11 @@ export function OdtEditor({
     URL.revokeObjectURL(url);
   };
 
-  if (storageUrl === undefined || loading) {
+  if (loading) {
     return (
       <div className="flex h-64 w-full flex-col items-center justify-center gap-2 rounded-lg border border-white/10 bg-[#070b14] text-slate-400">
         <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
-        <span className="text-xs">Loading ODT document...</span>
+        <span className="text-xs">Loading document...</span>
       </div>
     );
   }
@@ -188,7 +244,7 @@ export function OdtEditor({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Save Status */}
+          {/* Sync Status */}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-white/[0.08] bg-[#080d1a] text-[11px] font-semibold text-slate-300">
             {saveStatus === "saving" ? (
               <>
@@ -197,13 +253,18 @@ export function OdtEditor({
               </>
             ) : saveStatus === "saved" ? (
               <>
-                <Check className="h-3 w-3 text-emerald-400" />
-                <span className="text-emerald-300">Saved</span>
+                <Cloud className="h-3 w-3 text-emerald-400" />
+                <span className="text-emerald-300">Synced</span>
+              </>
+            ) : saveStatus === "local" ? (
+              <>
+                <CloudOff className="h-3 w-3 text-amber-400" />
+                <span className="text-amber-300">Local</span>
               </>
             ) : (
               <>
-                <Lock className="h-3 w-3 text-amber-400" />
-                <span>Edit Mode</span>
+                <Check className="h-3 w-3 text-slate-500" />
+                <span className="text-slate-400">Ready</span>
               </>
             )}
           </div>
@@ -376,9 +437,9 @@ export function OdtEditor({
 
       {/* Footer Status */}
       <div className="flex items-center justify-between border-t border-white/[0.06] bg-[#080d1a] px-4 py-1.5 text-[11px] font-mono text-slate-500">
-        <span>OpenDocument Text</span>
+        <span>OpenDocument Text — Local-first editing</span>
         <div className="flex items-center gap-3">
-          <span>{editor?.storage.characterCount?.characters?.() ?? editor?.getText().length ?? 0} chars</span>
+          <span>{editor?.getText().length ?? 0} chars</span>
           <span>{editor?.getText().split(/\s+/).filter(Boolean).length ?? 0} words</span>
         </div>
       </div>

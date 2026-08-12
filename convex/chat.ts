@@ -41,15 +41,8 @@ export const listMessages = query({
 export const getUsers = query({
   args: {},
   handler: async (ctx) => {
-    const online = await ctx.db
-      .query("users")
-      .withIndex("by_status", (q) => q.eq("status", "online"))
-      .take(500);
-    const away = await ctx.db
-      .query("users")
-      .withIndex("by_status", (q) => q.eq("status", "away"))
-      .take(500);
-    return [...online, ...away];
+    const users = await ctx.db.query("users").take(500);
+    return users;
   },
 });
 

@@ -40,10 +40,20 @@ export const upsert = mutation({
         ...(args.email !== undefined && { email: args.email }),
         ...(passwordUpdate !== undefined && { password: passwordUpdate }),
       });
+
+      await ctx.db.insert("auditLogs", {
+        action: "User Access Updated",
+        actor: "Admin",
+        details: `Updated member account @${args.pubkey} (${args.name})`,
+        category: "user",
+        timestamp: Date.now(),
+        metadata: JSON.stringify({ pubkey: args.pubkey, name: args.name }),
+      });
+
       return existing._id;
     }
 
-    return await ctx.db.insert("users", {
+    const userId = await ctx.db.insert("users", {
       pubkey: args.pubkey,
       name: args.name,
       email: args.email,
@@ -53,13 +63,35 @@ export const upsert = mutation({
       lastSeen: Date.now(),
       deviceType: args.deviceType,
     });
+
+    await ctx.db.insert("auditLogs", {
+      action: "User Access Granted",
+      actor: "Admin",
+      details: `Created member account @${args.pubkey} (${args.name})`,
+      category: "user",
+      timestamp: Date.now(),
+      metadata: JSON.stringify({ pubkey: args.pubkey, name: args.name }),
+    });
+
+    return userId;
   },
 });
 
 export const remove = mutation({
-  args: { userId: v.id("users") },
+  args: { userId: v.id("users"), actor: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.userId);
+    const user = await ctx.db.get(args.userId);
+    if (user) {
+      await ctx.db.delete(args.userId);
+      await ctx.db.insert("auditLogs", {
+        action: "User Revocation Executed",
+        actor: args.actor || "Admin",
+        details: `Revoked access and deleted member account @${user.pubkey} (${user.name})`,
+        category: "user",
+        timestamp: Date.now(),
+        metadata: JSON.stringify({ pubkey: user.pubkey, name: user.name }),
+      });
+    }
     return args.userId;
   },
 });

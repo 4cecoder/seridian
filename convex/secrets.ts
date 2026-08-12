@@ -68,6 +68,15 @@ export const setSecret = mutation({
       });
     }
 
+    await ctx.db.insert("auditLogs", {
+      action: existing ? "Secret Value Updated" : "Secret Value Created",
+      actor: args.currentUserId || "Admin",
+      details: `${existing ? "Updated" : "Created"} secret vault entry ${args.name}`,
+      category: "secret",
+      timestamp: Date.now(),
+      metadata: JSON.stringify({ secretName: args.name, category: args.category }),
+    });
+
     return { success: true };
   },
 });
@@ -89,6 +98,14 @@ export const deleteSecret = mutation({
 
     if (existing) {
       await ctx.db.delete(existing._id);
+      await ctx.db.insert("auditLogs", {
+        action: "Secret Value Deleted",
+        actor: args.currentUserId || "Admin",
+        details: `Deleted secret vault entry ${args.name}`,
+        category: "secret",
+        timestamp: Date.now(),
+        metadata: JSON.stringify({ secretName: args.name }),
+      });
     }
 
     return { success: true };

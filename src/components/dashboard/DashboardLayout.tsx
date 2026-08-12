@@ -32,17 +32,17 @@ const routeNames: Record<string, string> = {
   settings: "Settings",
 };
 
-/** Number keys 1-9 map to these section slugs in order. */
+/** Number keys 1-9 map to these section slugs in sidebar order. */
 const sectionByNumber: Record<string, string> = {
   "1": "overview",
   "2": "issues",
   "3": "clients",
   "4": "bookings",
-  "5": "sales",
-  "6": "proposals",
+  "5": "proposals",
+  "6": "sales",
   "7": "templates",
-  "8": "files",
-  "9": "chat",
+  "8": "wiki",
+  "9": "brain",
 };
 
 /** Context-aware "new item" routes per section. */

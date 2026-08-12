@@ -21,6 +21,7 @@ import {
   ChevronRight,
   BookOpen,
   Brain,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,25 +34,34 @@ interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
-  group: "core" | "business" | "tools";
+  group: "overview" | "work" | "pipeline" | "knowledge" | "system";
 }
 
 const navItems: NavItem[] = [
-  { href: "/dashboard", label: "Overview", icon: Home, group: "core" },
-  { href: "/dashboard/issues", label: "Issues", icon: CheckCircle, group: "core" },
-  { href: "/dashboard/clients", label: "Clients", icon: Users, group: "core" },
-  { href: "/dashboard/bookings", label: "Bookings", icon: Calendar, group: "business" },
-  { href: "/dashboard/sales", label: "Sales", icon: DollarSign, group: "business" },
-  { href: "/dashboard/proposals", label: "Proposals", icon: FileText, group: "business" },
-  { href: "/dashboard/templates", label: "Templates", icon: Mail, group: "tools" },
-  { href: "/dashboard/files", label: "Files", icon: Folder, group: "tools" },
-  { href: "/dashboard/chat", label: "Chat", icon: MessageSquare, group: "tools" },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings, group: "tools" },
-  { href: "/dashboard/wiki", label: "Wiki", icon: BookOpen, group: "tools" },
-  { href: "/dashboard/brain", label: "Second Brain", icon: Brain, group: "tools" },
+  { href: "/dashboard", label: "Overview", icon: Home, group: "overview" },
+  { href: "/dashboard/issues", label: "Issues", icon: CheckCircle, group: "work" },
+  { href: "/dashboard/clients", label: "Clients", icon: Users, group: "work" },
+  { href: "/dashboard/bookings", label: "Bookings", icon: Calendar, group: "work" },
+  { href: "/dashboard/proposals", label: "Proposals", icon: FileText, group: "pipeline" },
+  { href: "/dashboard/sales", label: "Sales", icon: DollarSign, group: "pipeline" },
+  { href: "/dashboard/templates", label: "Templates", icon: Mail, group: "pipeline" },
+  { href: "/dashboard/wiki", label: "Wiki", icon: BookOpen, group: "knowledge" },
+  { href: "/dashboard/arena", label: "LLM Arena", icon: Bot, group: "knowledge" },
+  { href: "/dashboard/brain", label: "Second Brain", icon: Brain, group: "knowledge" },
+  { href: "/dashboard/files", label: "Files", icon: Folder, group: "knowledge" },
+  { href: "/dashboard/chat", label: "Chat", icon: MessageSquare, group: "knowledge" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, group: "system" },
 ];
 
-const groupLabels = { core: "Core", business: "Business", tools: "Tools" } as const;
+const groupLabels: Record<string, string> = {
+  overview: "Overview",
+  work: "Work",
+  pipeline: "Pipeline",
+  knowledge: "Knowledge",
+  system: "System",
+};
+
+const groupOrder = ["overview", "work", "pipeline", "knowledge", "system"];
 
 function NavGroup({ group, items, pathname, collapsed }: { group: string; items: NavItem[]; pathname: string; collapsed: boolean }) {
   return (
@@ -110,6 +120,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     {} as Record<string, NavItem[]>,
   );
 
+  const orderedGroups = groupOrder.filter((g) => grouped[g]);
+
   return (
     <aside
       className={cn(
@@ -127,8 +139,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </div>
 
       <nav role="navigation" aria-label="Main navigation" className="flex-1 overflow-y-auto px-2 py-3">
-        {Object.entries(grouped).map(([group, items]) => (
-          <NavGroup key={group} group={group} items={items} pathname={pathname} collapsed={collapsed} />
+        {orderedGroups.map((group) => (
+          <NavGroup key={group} group={group} items={grouped[group]} pathname={pathname} collapsed={collapsed} />
         ))}
       </nav>
 

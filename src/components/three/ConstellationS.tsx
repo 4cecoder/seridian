@@ -11,15 +11,14 @@ function ConstellationPoints() {
   const groupRef = useRef<THREE.Group>(null);
   const pointsRef = useRef<THREE.Points>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
-  const bgPointsRef = useRef<THREE.Points>(null);
 
-  const { sLineGeo, sPointsGeo, bgGeo, starSizes } = useMemo(() => {
+  const { sLineGeo, sPointsGeo, sPointSizes, bgGeo, bgSizes } = useMemo(() => {
     const sPoints: [number, number][] = [];
-    const segments = 80;
+    const segments = 60;
     for (let i = 0; i <= segments; i++) {
       const t = (i / segments) * Math.PI * 2;
-      const x = Math.sin(t) * 0.6;
-      const y = Math.cos(t * 2) * 0.35;
+      const x = Math.sin(t) * 0.42;
+      const y = Math.cos(t * 2) * 0.28;
       sPoints.push([x, y]);
     }
 
@@ -28,6 +27,10 @@ function ConstellationPoints() {
       sPos[i * 3] = sPoints[i][0];
       sPos[i * 3 + 1] = sPoints[i][1];
       sPos[i * 3 + 2] = 0;
+    }
+    const sPointSizes = new Float32Array(sPoints.length);
+    for (let i = 0; i < sPoints.length; i++) {
+      sPointSizes[i] = 1.5 + Math.random() * 1.5;
     }
     const sPointsGeo = new THREE.BufferGeometry();
     sPointsGeo.setAttribute("position", new THREE.BufferAttribute(sPos, 3));
@@ -50,38 +53,30 @@ function ConstellationPoints() {
     sLineGeo.setAttribute("position", new THREE.BufferAttribute(linePos, 3));
     sLineGeo.setAttribute("color", new THREE.BufferAttribute(lineCol, 3));
 
-    const bgCount = 40;
+    const bgCount = 30;
     const bgPos = new Float32Array(bgCount * 3);
-    const sizes = new Float32Array(bgCount);
+    const bgSizes = new Float32Array(bgCount);
     for (let i = 0; i < bgCount; i++) {
-      bgPos[i * 3] = (Math.random() - 0.5) * 2.4;
-      bgPos[i * 3 + 1] = (Math.random() - 0.5) * 2.0;
-      bgPos[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
-      sizes[i] = Math.random() * 2.0 + 0.5;
+      bgPos[i * 3] = (Math.random() - 0.5) * 1.8;
+      bgPos[i * 3 + 1] = (Math.random() - 0.5) * 1.4;
+      bgPos[i * 3 + 2] = 0;
+      bgSizes[i] = 0.5 + Math.random() * 1.0;
     }
     const bgGeo = new THREE.BufferGeometry();
     bgGeo.setAttribute("position", new THREE.BufferAttribute(bgPos, 3));
 
-    return { sLineGeo, sPointsGeo, bgGeo, starSizes: sizes };
+    return { sLineGeo, sPointsGeo, sPointSizes, bgGeo, bgSizes };
   }, []);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     if (groupRef.current) {
-      groupRef.current.rotation.z = Math.sin(t * 0.3) * 0.08;
-      groupRef.current.position.y = Math.sin(t * 0.5) * 0.03;
-    }
-    if (pointsRef.current) {
-      const sizes = pointsRef.current.geometry.attributes.size as THREE.BufferAttribute;
-      const arr = sizes.array as Float32Array;
-      for (let i = 0; i < arr.length; i++) {
-        arr[i] = starSizes[i] * (0.8 + Math.sin(t * 2.0 + i * 0.5) * 0.4);
-      }
-      sizes.needsUpdate = true;
+      groupRef.current.rotation.z = Math.sin(t * 0.3) * 0.06;
+      groupRef.current.position.y = Math.sin(t * 0.5) * 0.02;
     }
     if (linesRef.current) {
       const mat = linesRef.current.material as THREE.LineBasicMaterial;
-      mat.opacity = 0.4 + Math.sin(t * 1.5) * 0.15;
+      mat.opacity = 0.5 + Math.sin(t * 1.5) * 0.15;
     }
   });
 
@@ -97,11 +92,11 @@ function ConstellationPoints() {
     <group ref={groupRef}>
       <points ref={pointsRef} geometry={sPointsGeo}>
         <pointsMaterial
-          size={0.035}
+          size={2}
           color={CYAN}
           transparent
           opacity={0.9}
-          sizeAttenuation
+          sizeAttenuation={false}
           depthWrite={false}
         />
       </points>
@@ -115,13 +110,13 @@ function ConstellationPoints() {
         />
       </lineSegments>
 
-      <points ref={bgPointsRef} geometry={bgGeo}>
+      <points geometry={bgGeo}>
         <pointsMaterial
-          size={0.018}
+          size={1.2}
           color={CYAN_DIM}
           transparent
-          opacity={0.4}
-          sizeAttenuation
+          opacity={0.35}
+          sizeAttenuation={false}
           depthWrite={false}
         />
       </points>
@@ -139,7 +134,7 @@ export function ConstellationS({ className, size = 32 }: ConstellationSProps) {
     <div className={className} style={{ width: size, height: size }}>
       <Canvas
         orthographic
-        camera={{ zoom: 55, position: [0, 0, 5] }}
+        camera={{ zoom: 60, position: [0, 0, 5] }}
         gl={{ alpha: true, antialias: true }}
         style={{ background: "transparent" }}
         dpr={[1, 2]}

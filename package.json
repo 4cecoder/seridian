@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@bytecats/ui-kit": "file:./vendor/ui-kit",
+    "@huggingface/transformers": "^4.2.0",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "@tanstack/react-query": "^5.101.4",

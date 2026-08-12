@@ -1,11 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
 import { X, MessageSquare, Sparkles, Bot, Zap, BarChart3 } from "lucide-react";
 import { MessageInput } from "./MessageInput";
 import { RichMessage } from "./RichMessage";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 type Message = Doc<"messages">;
 
@@ -65,6 +67,17 @@ export function ThreadDrawer({
   currentUserName,
 }: ThreadDrawerProps) {
   const allMessages = useQuery(api.messages.listAll, {});
+  const users = useQuery(api.users.list, {});
+
+  const userAvatarMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    if (users) {
+      for (const u of users) {
+        map.set(u.pubkey, u.avatar ?? null);
+      }
+    }
+    return map;
+  }, [users]);
 
   if (!parentMessage) return null;
 
@@ -100,19 +113,24 @@ export function ThreadDrawer({
         <div className="rounded-xl border border-white/10 bg-[#070b14] p-3.5 shadow-md">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
-                  agentMeta.isAgent
-                    ? agentMeta.avatarBg
-                    : "bg-seridian-500/10 text-seridian-400"
-                }`}
-              >
-                {agentMeta.isAgent && agentMeta.icon ? (
-                  <agentMeta.icon className="h-3.5 w-3.5" />
-                ) : (
-                  parentMessage.senderName.charAt(0).toUpperCase()
-                )}
-              </div>
+              {agentMeta.isAgent ? (
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${agentMeta.avatarBg}`}
+                >
+                  {agentMeta.icon ? (
+                    <agentMeta.icon className="h-3.5 w-3.5" />
+                  ) : (
+                    parentMessage.senderName.charAt(0).toUpperCase()
+                  )}
+                </div>
+              ) : (
+                <UserAvatar
+                  name={parentMessage.senderName}
+                  avatarUrl={userAvatarMap.get(parentMessage.senderId) ?? null}
+                  size="sm"
+                  ringColor="ring-1 ring-seridian-500/30"
+                />
+              )}
               <span className="text-sm font-medium text-slate-100">
                 {parentMessage.senderName}
               </span>
@@ -158,19 +176,24 @@ export function ThreadDrawer({
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
-                      <div
-                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold ${
-                          replyAgent.isAgent
-                            ? replyAgent.avatarBg
-                            : "bg-seridian-500/10 text-seridian-400"
-                        }`}
-                      >
-                        {replyAgent.isAgent && replyAgent.icon ? (
-                          <replyAgent.icon className="h-3 w-3" />
-                        ) : (
-                          reply.senderName.charAt(0).toUpperCase()
-                        )}
-                      </div>
+                      {replyAgent.isAgent ? (
+                        <div
+                          className={`flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold ${replyAgent.avatarBg}`}
+                        >
+                          {replyAgent.icon ? (
+                            <replyAgent.icon className="h-3 w-3" />
+                          ) : (
+                            reply.senderName.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                      ) : (
+                        <UserAvatar
+                          name={reply.senderName}
+                          avatarUrl={userAvatarMap.get(reply.senderId) ?? null}
+                          size="xs"
+                          ringColor="ring-1 ring-seridian-500/20"
+                        />
+                      )}
                       <span className="text-xs font-medium text-slate-200">
                         {reply.senderName}
                       </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
@@ -39,30 +39,31 @@ import {
   Sparkles,
   Server,
   Zap,
+  User,
 } from "lucide-react";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
 import { SyncDashboard } from "@/components/sync/SyncDashboard";
 import { SecretsVault } from "@/components/settings/SecretsVault";
 import { AuditLogViewer } from "@/components/settings/AuditLogViewer";
+import { AvatarUpload } from "@/components/settings/AvatarUpload";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { cn } from "@/lib/utils";
 
 type User = Doc<"users">;
 
 function UserCard({ user, onEdit, onDelete }: { user: User; onEdit: (user: User) => void; onDelete: (userId: Id<"users">) => void }) {
-  const statusColors: Record<string, string> = {
-    online: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]",
-    away: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]",
-    offline: "bg-slate-500",
-  };
+  const avatarUrl = user.avatar ? `${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${user.avatar}` : null;
 
   return (
     <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-[#080d1a]/80 p-4 transition-all hover:border-cyan-500/30 hover:bg-[#0c1222]">
       <div className="flex items-center gap-4">
         <div className="relative">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-sm font-bold text-cyan-300">
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-          <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#070b14] ${statusColors[user.status]}`} aria-hidden="true" />
+          <UserAvatar
+            name={user.name}
+            avatarUrl={avatarUrl}
+            size="lg"
+            status={user.status}
+          />
         </div>
         <div>
           <div className="flex items-center gap-2">
@@ -156,6 +157,157 @@ function UserForm({ user, onClose }: { user?: User; onClose: () => void }) {
   );
 }
 
+function getStoredUser() {
+  if (typeof window === "undefined") return null;
+  const stored = localStorage.getItem("seridian_user");
+  if (stored) {
+    try { return JSON.parse(stored) as { pubkey: string; name: string }; } catch { return null; }
+  }
+  return null;
+}
+
+function ProfileTab() {
+  const [storedUser, setStoredUser] = useState(() => getStoredUser());
+  const user = useQuery(api.users.get, storedUser ? { pubkey: storedUser.pubkey } : "skip");
+  const updateUser = useMutation(api.users.upsert);
+
+  const [name, setName] = useState(user?.name ?? storedUser?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email ?? "");
+      if (user.avatar) {
+        setAvatarUrl(`${process.env.NEXT_PUBLIC_CONVEX_URL}/api/storage/${user.avatar}`);
+      }
+    }
+  }, [user]);
+
+  const handleSave = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!storedUser || !name.trim()) return;
+    setSaving(true);
+    try {
+      await updateUser({
+        pubkey: storedUser.pubkey,
+        name: name.trim(),
+        email: email.trim() || undefined,
+        status: user?.status ?? "online",
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } finally {
+      setSaving(false);
+    }
+  }, [storedUser, name, email, user, updateUser]);
+
+  if (!storedUser) {
+    return (
+      <div className="rounded-xl border border-white/[0.08] bg-[#0c1222]/80 p-6 text-center">
+        <p className="text-sm text-slate-400">Sign in to manage your profile.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Avatar Section */}
+      <div className="rounded-xl border border-white/[0.08] bg-[#0c1222]/80 p-6">
+        <div className="border-b border-white/[0.08] pb-4 mb-6">
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <User className="h-4 w-4 text-cyan-400" /> Profile Photo
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            Upload a profile picture that will be displayed in chat and across the workspace.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <AvatarUpload
+            pubkey={storedUser.pubkey}
+            name={name || storedUser.name}
+            avatarUrl={avatarUrl}
+            onAvatarChange={setAvatarUrl}
+            size="xl"
+          />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-slate-200">{name || storedUser.name}</p>
+            <p className="text-xs text-slate-400">@{storedUser.pubkey}</p>
+            <p className="text-[11px] text-slate-500">
+              Recommended: Square image, at least 256x256px. Max 5MB.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Profile Info Section */}
+      <form onSubmit={handleSave} className="rounded-xl border border-white/[0.08] bg-[#0c1222]/80 p-6 space-y-6">
+        <div className="border-b border-white/[0.08] pb-4">
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <Sliders className="h-4 w-4 text-cyan-400" /> Account Information
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            Manage your personal account details and preferences.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-slate-300">Display Name</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+              className="bg-[#070b14] border-white/10 text-xs"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs font-semibold text-slate-300">Email Address</Label>
+            <Input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              placeholder="you@example.com"
+              className="bg-[#070b14] border-white/10 text-xs"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-slate-300">User Handle</Label>
+          <Input
+            value={storedUser.pubkey}
+            disabled
+            className="bg-[#070b14] border-white/10 text-xs font-mono opacity-60"
+          />
+          <p className="text-[11px] text-slate-500">Your unique identifier cannot be changed.</p>
+        </div>
+
+        {saveSuccess && (
+          <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-xs flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span>Profile updated successfully.</span>
+          </div>
+        )}
+
+        <div className="flex justify-end border-t border-white/[0.06] pt-4">
+          <Button
+            type="submit"
+            disabled={saving || !name.trim()}
+            className="bg-cyan-500 text-black hover:bg-cyan-400 font-semibold text-xs px-4"
+          >
+            {saving ? "Saving..." : "Save Profile"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 function SettingsContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -204,6 +356,7 @@ function SettingsContent() {
   );
 
   const SETTINGS_SECTIONS = [
+    { id: "profile", label: "My Profile", icon: User, badge: "Account" },
     { id: "general", label: "General & Org", icon: Sliders, badge: "System" },
     { id: "audit", label: "Audit Logs", icon: Shield, badge: "Governance" },
     { id: "users", label: "Team & Access", icon: Users, badge: `${users?.length ?? 0} Active` },
@@ -289,6 +442,11 @@ function SettingsContent() {
 
         {/* Content Pane */}
         <div className="min-w-0">
+          {/* TAB 0: MY PROFILE */}
+          {activeTab === "profile" && (
+            <ProfileTab />
+          )}
+
           {/* TAB 1: GENERAL SETTINGS */}
           {activeTab === "general" && (
             <div className="space-y-6">

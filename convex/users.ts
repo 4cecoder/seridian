@@ -105,3 +105,54 @@ export const get = query({
       .first();
   },
 });
+
+export const generateAvatarUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const updateAvatar = mutation({
+  args: {
+    pubkey: v.string(),
+    avatarStorageId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_pubkey", (q) => q.eq("pubkey", args.pubkey))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        avatar: args.avatarStorageId,
+      });
+      return existing._id;
+    }
+    return null;
+  },
+});
+
+export const removeAvatar = mutation({
+  args: {
+    pubkey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_pubkey", (q) => q.eq("pubkey", args.pubkey))
+      .first();
+
+    if (existing) {
+      if (existing.avatar) {
+        await ctx.storage.delete(existing.avatar as any);
+      }
+      await ctx.db.patch(existing._id, {
+        avatar: undefined,
+      });
+      return existing._id;
+    }
+    return null;
+  },
+});

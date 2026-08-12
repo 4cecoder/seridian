@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { RichMessage } from "./RichMessage";
 import { ContextMenu } from "@/components/ui/ContextMenu";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 type Message = Doc<"messages">;
 
@@ -110,12 +111,14 @@ function MessageItem({
   replyToMessage,
   replyCount,
   onOpenThread,
+  avatarUrl,
 }: {
   message: Message;
   showSender: boolean;
   replyToMessage?: Message;
   replyCount: number;
   onOpenThread?: (message: Message) => void;
+  avatarUrl?: string | null;
 }) {
   const [reactions, setReactions] = useState<Record<string, number>>({});
   const [userReactions, setUserReactions] = useState<Record<string, boolean>>({});
@@ -248,19 +251,24 @@ function MessageItem({
       {/* Header Info */}
       {(showSender || agentMeta.isAgent) && (
         <div className="flex items-center gap-2 mb-1.5">
-          <div
-            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-              agentMeta.isAgent
-                ? agentMeta.avatarBg
-                : "bg-seridian-500/10 text-seridian-400"
-            }`}
-          >
-            {agentMeta.isAgent && agentMeta.icon ? (
-              <agentMeta.icon className="h-3.5 w-3.5" />
-            ) : (
-              message.senderName.charAt(0).toUpperCase()
-            )}
-          </div>
+          {agentMeta.isAgent ? (
+            <div
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${agentMeta.avatarBg}`}
+            >
+              {agentMeta.icon ? (
+                <agentMeta.icon className="h-3.5 w-3.5" />
+              ) : (
+                message.senderName.charAt(0).toUpperCase()
+              )}
+            </div>
+          ) : (
+            <UserAvatar
+              name={message.senderName}
+              avatarUrl={avatarUrl}
+              size="sm"
+              ringColor="ring-1 ring-seridian-500/30"
+            />
+          )}
 
           <span className="text-sm font-semibold text-slate-100">
             {message.senderName}
@@ -345,7 +353,18 @@ export function MessageList({
 }: MessageListProps) {
   const messages = useQuery(api.messages.listByChannel, { channelId });
   const allMessages = useQuery(api.messages.listAll, {});
+  const users = useQuery(api.users.list, {});
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const userAvatarMap = useMemo(() => {
+    const map = new Map<string, string | null>();
+    if (users) {
+      for (const u of users) {
+        map.set(u.pubkey, u.avatar ?? null);
+      }
+    }
+    return map;
+  }, [users]);
 
   // Auto scroll to bottom when messages update
   useEffect(() => {
@@ -470,6 +489,7 @@ export function MessageList({
                       replyToMessage={replyToMsg}
                       replyCount={rCount}
                       onOpenThread={onOpenThread}
+                      avatarUrl={userAvatarMap.get(msg.senderId) ?? null}
                     />
                   );
                 })}

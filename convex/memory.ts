@@ -621,6 +621,52 @@ export const getMemory = query({
   },
 });
 
+// ===== Memory Update & Delete =====
+
+export const updateMemory = mutation({
+  args: {
+    memoryId: v.id("memories"),
+    content: v.optional(v.string()),
+    tags: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.get(args.memoryId);
+    if (!existing) throw new Error("Memory not found");
+
+    const patch: Record<string, unknown> = { updatedAt: Date.now() };
+    if (args.content !== undefined) patch.content = args.content;
+    if (args.tags !== undefined) patch.tags = args.tags;
+
+    await ctx.db.patch(args.memoryId, patch);
+    return args.memoryId;
+  },
+});
+
+export const deleteMemory = mutation({
+  args: { memoryId: v.id("memories") },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.get(args.memoryId);
+    if (!existing) throw new Error("Memory not found");
+
+    // Remove associated connections
+    const outgoing = await ctx.db
+      .query("memoryConnections")
+      .withIndex("by_source", (q) => q.eq("sourceMemoryId", args.memoryId))
+      .take(50);
+    const incoming = await ctx.db
+      .query("memoryConnections")
+      .withIndex("by_target", (q) => q.eq("targetMemoryId", args.memoryId))
+      .take(50);
+
+    for (const conn of [...outgoing, ...incoming]) {
+      await ctx.db.delete(conn._id);
+    }
+
+    await ctx.db.delete(args.memoryId);
+    return args.memoryId;
+  },
+});
+
 export const getMemoryStats = query({
   args: { bankId: v.id("memoryBanks") },
   handler: async (ctx, args) => {

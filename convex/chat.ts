@@ -180,6 +180,7 @@ export const updateUserStatus = mutation({
     pubkey: v.string(),
     status: v.union(v.literal("online"), v.literal("offline"), v.literal("away")),
     name: v.string(),
+    email: v.optional(v.string()),
     avatar: v.optional(v.string()),
     deviceType: v.optional(
       v.union(v.literal("web"), v.literal("android"), v.literal("ios")),
@@ -196,6 +197,7 @@ export const updateUserStatus = mutation({
         status: args.status,
         lastSeen: now,
         name: args.name,
+        ...(args.email !== undefined && { email: args.email }),
         ...(args.avatar !== undefined && { avatar: args.avatar }),
         ...(args.deviceType !== undefined && { deviceType: args.deviceType }),
       });
@@ -204,6 +206,7 @@ export const updateUserStatus = mutation({
     return await ctx.db.insert("users", {
       pubkey: args.pubkey,
       name: args.name,
+      email: args.email,
       avatar: args.avatar,
       status: args.status,
       lastSeen: now,

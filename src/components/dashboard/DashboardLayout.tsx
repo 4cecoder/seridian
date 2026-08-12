@@ -27,6 +27,7 @@ const routeNames: Record<string, string> = {
   files: "Files",
   chat: "Chat",
   sync: "Sync",
+  settings: "Settings",
 };
 
 /** Number keys 1-9 map to these section slugs in order. */

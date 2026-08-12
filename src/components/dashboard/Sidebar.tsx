@@ -16,6 +16,7 @@ import {
   Folder,
   RefreshCw,
   MessageSquare,
+  Settings,
   ChevronLeft,
   ChevronRight,
   type LucideIcon,
@@ -39,6 +40,7 @@ const navItems: NavItem[] = [
   { href: "/dashboard/files", label: "Files", icon: Folder, group: "tools" },
   { href: "/dashboard/sync", label: "Sync", icon: RefreshCw, group: "tools" },
   { href: "/dashboard/chat", label: "Chat", icon: MessageSquare, group: "tools" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings, group: "tools" },
 ];
 
 const groupLabels = { core: "Core", business: "Business", tools: "Tools" } as const;

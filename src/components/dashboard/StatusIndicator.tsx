@@ -12,13 +12,21 @@ const statusConfig: Record<StatusState, { color: string; label: string; pulse: b
 };
 
 export function StatusIndicator() {
-  const state = useConvexConnectionState();
+  let state: ReturnType<typeof useConvexConnectionState> | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    state = useConvexConnectionState();
+  } catch {
+    // If Convex is blocked (e.g. Firefox NS_ERROR_CONTENT_BLOCKED from tracking protection/adblockers)
+    // or provider is unmounted, fallback to disconnected state safely.
+  }
+
   const [flash, setFlash] = useState(false);
 
   const statusState: StatusState =
-    state.isWebSocketConnected
+    state?.isWebSocketConnected
       ? "connected"
-      : state.hasEverConnected
+      : state?.hasEverConnected
         ? "reconnecting"
         : "disconnected";
 

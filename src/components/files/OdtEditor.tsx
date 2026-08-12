@@ -72,12 +72,26 @@ export function OdtEditor({
         const bytes = new Uint8Array(buffer);
         setOriginalBytes(bytes);
 
-        // Dynamically import odf-kit to parse ODT
-        const { odtToHtml } = await import("odf-kit/reader");
-        const html = odtToHtml(bytes);
+        // Check if this is actually a ZIP file (valid ODT)
+        // ZIP files start with PK (0x50 0x4B)
+        const isZip = bytes[0] === 0x50 && bytes[1] === 0x4B;
 
-        // Load HTML into TipTap editor
-        editor.commands.setContent(html);
+        if (isZip) {
+          // Valid ODT - parse with odf-kit
+          const { odtToHtml } = await import("odf-kit/reader");
+          const html = odtToHtml(bytes);
+          editor.commands.setContent(html);
+        } else {
+          // Not a valid ODT (probably stored as text) - load as plain text
+          const textContent = new TextDecoder().decode(bytes);
+          // Convert plain text to HTML paragraphs
+          const html = textContent
+            .split("\n\n")
+            .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+            .join("");
+          editor.commands.setContent(html || "<p></p>");
+        }
+        
         setLoading(false);
       })
       .catch((err) => {
@@ -95,20 +109,7 @@ export function OdtEditor({
     setSaveStatus("saving");
 
     try {
-      // Get TipTap JSON content
-      const json = editor.getJSON();
-
-      // Dynamically import odf-kit to generate ODT
-      const { tiptapToOdt } = await import("odf-kit");
-      const newBytes = await tiptapToOdt(json, { pageFormat: "A4" });
-
-      // Upload new ODT to Convex storage
-      const postUrl = await fetch("/api/upload-url", { method: "POST" })
-        .then((r) => r.json())
-        .then((d) => d.url);
-
-      // For now, save the content as text in collaboration doc
-      // TODO: Implement proper ODT re-upload when HTTP actions are enabled
+      // Save the HTML content to collaboration doc
       const htmlContent = editor.getHTML();
       await updateDocContent({
         fileId,

@@ -143,8 +143,36 @@ export function FileManager({ clientId }: FileManagerProps) {
       const finalName = createTitle.endsWith(template.extension) ? createTitle : `${createTitle}${template.extension}`;
 
       const postUrl = await generateUploadUrl();
-      const content = createInitialContent.trim() || (template.id === "odt" ? "" : `# ${createTitle}\n\nDocument initialized.`);
-      const blob = new Blob([content], { type: template.mimeType });
+      
+      let blob: Blob;
+      let initialContent: string;
+      
+      if (template.id === "odt") {
+        // Create proper ODT binary using odf-kit
+        const { OdtDocument } = await import("odf-kit");
+        const doc = new OdtDocument();
+        doc.setMetadata({ title: createTitle });
+        
+        const content = createInitialContent.trim();
+        initialContent = content;
+        if (content) {
+          // Split by double newlines for paragraphs
+          const paragraphs = content.split("\n\n");
+          for (const para of paragraphs) {
+            doc.addParagraph(para);
+          }
+        } else {
+          doc.addParagraph("");
+        }
+        
+        const bytes = await doc.save();
+        blob = new Blob([new Uint8Array(bytes)], { type: template.mimeType });
+      } else {
+        // For other formats, use text content
+        const content = createInitialContent.trim() || `# ${createTitle}\n\nDocument initialized.`;
+        initialContent = content;
+        blob = new Blob([content], { type: template.mimeType });
+      }
 
       const res = await fetch(postUrl, {
         method: "POST",
@@ -159,7 +187,7 @@ export function FileManager({ clientId }: FileManagerProps) {
         type: template.mimeType,
         storageId: storageId as Id<"_storage">,
         size: blob.size,
-        initialContent: content,
+        initialContent: initialContent,
         parentId: currentFolder,
         clientId,
         uploadedBy: "Dee",

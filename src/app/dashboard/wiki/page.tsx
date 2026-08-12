@@ -8,6 +8,7 @@ import { BookOpen, Plus } from "lucide-react";
 import { WikiSidebar } from "@/components/wiki/WikiSidebar";
 import { WikiPage } from "@/components/wiki/WikiPage";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
+import { FloatingPagesBackground } from "@/components/three/backgrounds";
 
 export default function WikiDashboardPage() {
   const banks = useQuery(api.memory.listBanks);
@@ -89,6 +90,7 @@ export default function WikiDashboardPage() {
 
   return (
     <DashboardGuard>
+      <FloatingPagesBackground />
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
           <div className="flex items-center gap-3">

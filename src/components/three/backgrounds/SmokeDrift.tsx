@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -8,7 +8,7 @@ function Smoke() {
   const ref = useRef<THREE.Points>(null);
   const count = 120;
 
-  const { positions, velocities } = useMemo(() => {
+  const { geo, velocities } = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const vel = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -19,7 +19,9 @@ function Smoke() {
       vel[i * 3 + 1] = Math.random() * 0.003 + 0.001;
       vel[i * 3 + 2] = 0;
     }
-    return { positions: pos, velocities: vel };
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    return { geo: g, velocities: vel };
   }, []);
 
   useFrame(() => {
@@ -37,19 +39,11 @@ function Smoke() {
     posAttr.needsUpdate = true;
   });
 
+  useEffect(() => () => geo.dispose(), [geo]);
+
   return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.15}
-        color="#94a3b8"
-        transparent
-        opacity={0.08}
-        sizeAttenuation={false}
-        depthWrite={false}
-      />
+    <points ref={ref} geometry={geo}>
+      <pointsMaterial size={0.15} color="#94a3b8" transparent opacity={0.08} sizeAttenuation={false} depthWrite={false} />
     </points>
   );
 }

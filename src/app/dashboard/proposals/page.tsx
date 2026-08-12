@@ -9,6 +9,7 @@ import { ProposalList } from "@/components/proposals/ProposalList";
 import { ProposalForm } from "@/components/proposals/ProposalForm";
 import { ProposalCard } from "@/components/proposals/ProposalCard";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
+import { FloatingPagesBackground } from "@/components/three/backgrounds";
 
 export default function ProposalsPage() {
   const [formOpen, setFormOpen] = useState(false);
@@ -46,6 +47,7 @@ export default function ProposalsPage() {
   if (viewingId) {
     return (
       <DashboardGuard>
+        <FloatingPagesBackground />
         <ProposalCard
           proposalId={viewingId}
           onBack={() => setViewingId(undefined)}
@@ -57,6 +59,7 @@ export default function ProposalsPage() {
 
   return (
     <DashboardGuard>
+      <FloatingPagesBackground />
       <ProposalList onAdd={handleAdd} onEdit={handleEdit} onView={handleView} />
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

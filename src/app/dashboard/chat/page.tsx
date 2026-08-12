@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ChatLayout } from "@/components/chat/ChatLayout";
+import { GlowBackground } from "@/components/three/backgrounds";
 
 function getStoredUser() {
   if (typeof window === "undefined") return null;
@@ -32,6 +33,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <GlowBackground />
       <ChatLayout currentUserId={user.pubkey} currentUserName={user.name} />
     </div>
   );

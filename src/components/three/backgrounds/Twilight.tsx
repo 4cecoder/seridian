@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -8,7 +8,7 @@ function Twilight() {
   const ref = useRef<THREE.Points>(null);
   const count = 80;
 
-  const { positions, colors } = useMemo(() => {
+  const geo = useMemo(() => {
     const pos = new Float32Array(count * 3);
     const col = new Float32Array(count * 3);
     const palette = [
@@ -24,7 +24,10 @@ function Twilight() {
       const c = palette[Math.floor(Math.random() * palette.length)].toArray();
       col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
     }
-    return { positions: pos, colors: col };
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    return g;
   }, []);
 
   useFrame((state) => {
@@ -40,20 +43,11 @@ function Twilight() {
     }
   });
 
+  useEffect(() => () => geo.dispose(), [geo]);
+
   return (
-    <points ref={ref}>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-        <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.06}
-        vertexColors
-        transparent
-        opacity={0.3}
-        sizeAttenuation={false}
-        depthWrite={false}
-      />
+    <points ref={ref} geometry={geo}>
+      <pointsMaterial size={0.06} vertexColors transparent opacity={0.3} sizeAttenuation={false} depthWrite={false} />
     </points>
   );
 }

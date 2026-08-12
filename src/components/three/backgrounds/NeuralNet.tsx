@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -9,36 +9,33 @@ function NeuralNet() {
   const nodeCount = 30;
   const connectionDist = 2.5;
 
-  const { positions, nodePositions } = useMemo(() => {
-    const pos = new Float32Array(nodeCount * 3);
+  const { nodeGeo, lineGeo } = useMemo(() => {
+    const nodePos = new Float32Array(nodeCount * 3);
     const np: THREE.Vector3[] = [];
     for (let i = 0; i < nodeCount; i++) {
       const x = (Math.random() - 0.5) * 10;
       const y = (Math.random() - 0.5) * 7;
-      pos[i * 3] = x;
-      pos[i * 3 + 1] = y;
-      pos[i * 3 + 2] = 0;
+      nodePos[i * 3] = x;
+      nodePos[i * 3 + 1] = y;
+      nodePos[i * 3 + 2] = 0;
       np.push(new THREE.Vector3(x, y, 0));
     }
-    return { positions: pos, nodePositions: np };
-  }, []);
+    const ng = new THREE.BufferGeometry();
+    ng.setAttribute("position", new THREE.BufferAttribute(nodePos, 3));
 
-  const lineGeo = useMemo(() => {
     const lines: number[] = [];
     for (let i = 0; i < nodeCount; i++) {
       for (let j = i + 1; j < nodeCount; j++) {
-        if (nodePositions[i].distanceTo(nodePositions[j]) < connectionDist) {
-          lines.push(
-            nodePositions[i].x, nodePositions[i].y, 0,
-            nodePositions[j].x, nodePositions[j].y, 0,
-          );
+        if (np[i].distanceTo(np[j]) < connectionDist) {
+          lines.push(np[i].x, np[i].y, 0, np[j].x, np[j].y, 0);
         }
       }
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(lines, 3));
-    return geo;
-  }, [nodePositions]);
+    const lg = new THREE.BufferGeometry();
+    lg.setAttribute("position", new THREE.Float32BufferAttribute(lines, 3));
+
+    return { nodeGeo: ng, lineGeo: lg };
+  }, []);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -47,23 +44,15 @@ function NeuralNet() {
     }
   });
 
+  useEffect(() => () => { nodeGeo.dispose(); lineGeo.dispose(); }, [nodeGeo, lineGeo]);
+
   return (
     <group ref={groupRef}>
       <lineSegments geometry={lineGeo}>
         <lineBasicMaterial color="#06b6d4" transparent opacity={0.06} />
       </lineSegments>
-      <points>
-        <bufferGeometry>
-          <bufferAttribute attach="attributes-position" count={nodeCount} array={positions} itemSize={3} />
-        </bufferGeometry>
-        <pointsMaterial
-          size={0.05}
-          color="#06b6d4"
-          transparent
-          opacity={0.2}
-          sizeAttenuation={false}
-          depthWrite={false}
-        />
+      <points geometry={nodeGeo}>
+        <pointsMaterial size={0.05} color="#06b6d4" transparent opacity={0.2} sizeAttenuation={false} depthWrite={false} />
       </points>
     </group>
   );

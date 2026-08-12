@@ -47,6 +47,7 @@ import { SecretsVault } from "@/components/settings/SecretsVault";
 import { AuditLogViewer } from "@/components/settings/AuditLogViewer";
 import { AvatarUpload } from "@/components/settings/AvatarUpload";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { GridBackground } from "@/components/three/backgrounds";
 import { cn } from "@/lib/utils";
 
 type User = Doc<"users">;
@@ -675,6 +676,7 @@ function SettingsContent() {
 export default function SettingsPage() {
   return (
     <DashboardGuard>
+      <GridBackground />
       <Suspense fallback={<Skeleton className="h-96 w-full rounded-xl" />}>
         <SettingsContent />
       </Suspense>

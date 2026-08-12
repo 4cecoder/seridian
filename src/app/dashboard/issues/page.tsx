@@ -25,6 +25,7 @@ import {
   Badge,
 } from "@bytecats/ui-kit";
 import { IssueCard } from "@/components/kanban/IssueCard";
+import { SmokeBackground } from "@/components/three/backgrounds";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/contexts/NotificationContext";
 
@@ -240,6 +241,7 @@ export default function IssuesPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <SmokeBackground />
       {/* ── Header ────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

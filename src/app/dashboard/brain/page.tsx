@@ -2,6 +2,7 @@
 import { Brain } from "lucide-react";
 import { SecondBrain } from "@/components/brain/SecondBrain";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
+import { NeuralBackground } from "@/components/three/backgrounds";
 
 export default function BrainDashboardPage() {
   const userId = "dee";
@@ -9,6 +10,7 @@ export default function BrainDashboardPage() {
 
   return (
     <DashboardGuard>
+      <NeuralBackground />
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
           <div className="flex items-center gap-3">

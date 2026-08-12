@@ -16,6 +16,7 @@ import { PipelineBoard } from "@/components/sales/PipelineBoard";
 import { DealDetail } from "@/components/sales/DealDetail";
 import { DealForm } from "@/components/sales/DealForm";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
+import { TwilightBackground } from "@/components/three/backgrounds";
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -36,6 +37,7 @@ function formatCurrency(value: number): string {
 export default function SalesPage() {
   return (
     <DashboardGuard>
+      <TwilightBackground />
       <SalesPageContent />
     </DashboardGuard>
   );

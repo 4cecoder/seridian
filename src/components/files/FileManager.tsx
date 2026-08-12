@@ -201,7 +201,7 @@ export function FileManager({ clientId }: FileManagerProps) {
             Create Document
           </Button>
 
-          <Button size="sm" onClick={() => setShowUpload(!showUpload)} className="h-7 bg-seridian-500 text-white hover:bg-seridian-400 text-xs">
+          <Button size="sm" onClick={() => setShowUpload(!showUpload)} className="h-7 bg-cyan-500 text-black hover:bg-cyan-400 font-semibold text-xs gap-1">
             {showUpload ? <X className="h-3.5 w-3.5 mr-1" /> : <Plus className="h-3.5 w-3.5 mr-1" />}
             {showUpload ? "Close" : "Upload"}
           </Button>

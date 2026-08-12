@@ -22,6 +22,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Button } from "@bytecats/ui-kit";
+import { OdtEditor } from "./OdtEditor";
 
 interface ConvexFilePreviewProps {
   fileId: Id<"files">;
@@ -227,8 +228,19 @@ export function ConvexFilePreview({
     );
   }
 
-  // ODT/RTF Binary Document Preview (Read-Only Rich View)
-  if (isBinaryDocument) {
+  // ODT Document — Editable with TipTap + odf-kit
+  if (isOdtFile) {
+    return (
+      <OdtEditor
+        fileId={fileId}
+        fileName={fileName}
+        currentUserId={currentUserId}
+      />
+    );
+  }
+
+  // RTF Binary Document Preview (Read-Only)
+  if (isRtfFile) {
     return (
       <div className="flex h-full w-full flex-1 flex-col rounded-xl border border-white/[0.08] bg-[#070b14] overflow-hidden shadow-2xl">
         {/* Header Bar */}

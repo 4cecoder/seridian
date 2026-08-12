@@ -1,12 +1,13 @@
 "use client";
 
-import { SyncDashboard } from "@/components/sync/SyncDashboard";
-import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
+import { redirect } from "next/navigation";
+import { useEffect } from "react";
 
 export default function SyncPage() {
-  return (
-    <DashboardGuard>
-      <SyncDashboard />
-    </DashboardGuard>
-  );
+  useEffect(() => {
+    redirect("/dashboard/settings");
+  }, []);
+
+  return null;
 }
+

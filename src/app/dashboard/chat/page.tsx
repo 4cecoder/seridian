@@ -6,9 +6,10 @@ import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
 export default function ChatPage() {
   return (
     <DashboardGuard>
-      <div className="h-[calc(100vh-12rem)]">
+      <div className="h-full w-full flex flex-col overflow-hidden bg-[#070b14]">
         <ChatLayout />
       </div>
     </DashboardGuard>
   );
 }
+

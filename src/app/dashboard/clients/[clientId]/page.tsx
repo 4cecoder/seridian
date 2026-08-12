@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Id } from "convex/_generated/dataModel";
@@ -135,7 +136,7 @@ export default function ClientDetailPage({
   return (
     <div className="space-y-6 p-1">
       <div className="flex items-center gap-3">
-        <a
+        <Link
           href="/dashboard/clients"
           className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 text-xs text-slate-400 transition-colors hover:border-seridian-500/20 hover:text-white"
         >
@@ -143,7 +144,7 @@ export default function ClientDetailPage({
             <path d="m15 18-6-6 6-6" />
           </svg>
           Back to Clients
-        </a>
+        </Link>
         <div className="flex-1" />
         <Button type="button" size="sm" onClick={() => setEditOpen(true)}>
           Edit Client

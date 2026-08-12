@@ -26,5 +26,6 @@ export function useStableQuery<T>(
   // maps to "skip" when false.
   const resolvedArgs = options?.enabled === false ? "skip" : args;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return useConvexQuery(query, resolvedArgs as any) as T | undefined;
 }

@@ -165,12 +165,12 @@ function MessageItem({
       action: handleCopyText,
     },
     {
-      label: "React with 👍",
+      label: "Add Thumbs Up Reaction",
       icon: Smile,
       action: () => handleToggleReaction("👍"),
     },
     {
-      label: "React with ❤️",
+      label: "Add Heart Reaction",
       icon: Heart,
       action: () => handleToggleReaction("❤️"),
     },

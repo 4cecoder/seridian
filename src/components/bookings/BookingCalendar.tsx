@@ -4,164 +4,68 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import { Doc, Id } from "convex/_generated/dataModel";
-import {
-  Button,
-  Badge,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@bytecats/ui-kit";
-import {
-  Calendar as CalendarIcon,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Video,
-  Code,
-  Eye,
-  Clock,
-  User,
-  MapPin,
-  Link2,
-  FileText,
-  Trash2,
-  Edit3,
-  ExternalLink,
-  Filter,
-  Briefcase,
-  CheckCircle2,
-} from "lucide-react";
+import { Button, Badge, Dialog, DialogContent, DialogHeader, DialogTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@bytecats/ui-kit";
+import { ChevronLeft, ChevronRight, Plus, Clock, User, Trash2, Edit3, Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BookingForm } from "./BookingForm";
-import Link from "next/link";
 
 type Booking = Doc<"bookings">;
 type Client = Doc<"clients">;
 
-export const TYPE_CONFIG = {
-  consultation: {
-    label: "Consultation",
-    bg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20",
-    badgeBg: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-    dot: "bg-cyan-400",
-    border: "border-l-cyan-400",
-    icon: Video,
-  },
-  development: {
-    label: "Development",
-    bg: "bg-purple-500/10 border-purple-500/20 text-purple-300 hover:bg-purple-500/20",
-    badgeBg: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-    dot: "bg-purple-400",
-    border: "border-l-purple-400",
-    icon: Code,
-  },
-  review: {
-    label: "Review",
-    bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/20",
-    badgeBg: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    dot: "bg-emerald-400",
-    border: "border-l-emerald-400",
-    icon: Eye,
-  },
-} as const;
+const TYPE_COLORS: Record<string, { bg: string; dot: string }> = {
+  consultation: { bg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-300", dot: "bg-cyan-400" },
+  development: { bg: "bg-purple-500/10 border-purple-500/20 text-purple-300", dot: "bg-purple-400" },
+  review: { bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-300", dot: "bg-emerald-400" },
+};
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const HOURS = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM (20:00)
-
 function toISODate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function formatTime(iso: string): string {
   if (!iso) return "";
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso.slice(11, 16);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-}
-
-function formatFullDate(iso: string): string {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function getDurationMinutes(startIso: string, endIso: string): number {
-  const start = new Date(startIso).getTime();
-  const end = new Date(endIso).getTime();
-  if (isNaN(start) || isNaN(end)) return 0;
-  return Math.max(0, Math.round((end - start) / (1000 * 60)));
+  return isNaN(d.getTime()) ? iso.slice(11, 16) : d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 }
 
 function getDaysInMonth(year: number, month: number): Date[] {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
   const days: Date[] = [];
-
-  let startDay = firstDay.getDay() - 1;
-  if (startDay < 0) startDay = 6;
-
-  for (let i = startDay - 1; i >= 0; i--) {
-    days.push(new Date(year, month, -i));
-  }
-
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    days.push(new Date(year, month, d));
-  }
-
+  let start = first.getDay() - 1;
+  if (start < 0) start = 6;
+  for (let i = start - 1; i >= 0; i--) days.push(new Date(year, month, -i));
+  for (let d = 1; d <= last.getDate(); d++) days.push(new Date(year, month, d));
   const remaining = 42 - days.length;
-  for (let i = 1; i <= remaining; i++) {
-    days.push(new Date(year, month + 1, i));
-  }
-
+  for (let i = 1; i <= remaining; i++) days.push(new Date(year, month + 1, i));
   return days;
 }
 
-function getWeekDates(currentDate: Date): Date[] {
-  const date = new Date(currentDate);
-  const dayOfWeek = date.getDay();
-  const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const monday = new Date(date);
-  monday.setDate(date.getDate() + diffToMon);
-
-  const days: Date[] = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    days.push(d);
-  }
-  return days;
+function getWeekDates(current: Date): Date[] {
+  const d = new Date(current);
+  const diff = d.getDay() === 0 ? -6 : 1 - d.getDay();
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diff);
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(monday);
+    day.setDate(monday.getDate() + i);
+    return day;
+  });
 }
 
 interface BookingCalendarProps {
   onDayClick?: (date: string) => void;
-  onBookingClick?: (bookingId: Id<"bookings">) => void;
 }
 
-export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarProps) {
-  const todayDate = new Date();
-  const [currentDate, setCurrentDate] = useState<Date>(todayDate);
+export function BookingCalendar({ onDayClick }: BookingCalendarProps) {
+  const today = new Date();
+  const [currentDate, setCurrentDate] = useState(today);
   const [view, setView] = useState<"month" | "week">("month");
-  const [selectedClientId, setSelectedClientId] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-
-  // Modal states
+  const [filterType, setFilterType] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
-  const [formDate, setFormDate] = useState<string | undefined>();
+  const [formDate, setFormDate] = useState<string>();
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [detailBooking, setDetailBooking] = useState<Booking | null>(null);
 
@@ -171,396 +75,113 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
 
   const clientMap = useMemo(() => {
     const map = new Map<string, Client>();
-    if (clients) {
-      for (const c of clients) {
-        map.set(c._id, c);
-      }
-    }
+    clients?.forEach((c) => map.set(c._id, c));
     return map;
   }, [clients]);
 
-  // Filter bookings
-  const filteredBookings = useMemo(() => {
+  const filtered = useMemo(() => {
     if (!bookings) return [];
-    return bookings.filter((b) => {
-      if (selectedClientId !== "all" && b.clientId !== selectedClientId) return false;
-      if (selectedType !== "all" && b.type !== selectedType) return false;
-      return true;
-    });
-  }, [bookings, selectedClientId, selectedType]);
+    return filterType === "all" ? bookings : bookings.filter((b) => b.type === filterType);
+  }, [bookings, filterType]);
 
-  // Counts by type
-  const stats = useMemo(() => {
-    const total = filteredBookings.length;
-    let consultation = 0;
-    let development = 0;
-    let review = 0;
-    for (const b of filteredBookings) {
-      if (b.type === "consultation") consultation++;
-      else if (b.type === "development") development++;
-      else if (b.type === "review") review++;
-    }
-    return { total, consultation, development, review };
-  }, [filteredBookings]);
-
-  // Bookings mapped by date string (YYYY-MM-DD)
-  const bookingsByDate = useMemo(() => {
+  const byDate = useMemo(() => {
     const map = new Map<string, Booking[]>();
-    for (const b of filteredBookings) {
-      const dateKey = b.startTime.slice(0, 10);
-      const list = map.get(dateKey) ?? [];
+    filtered.forEach((b) => {
+      const key = b.startTime.slice(0, 10);
+      const list = map.get(key) ?? [];
       list.push(b);
-      map.set(dateKey, list);
-    }
-    // Sort bookings in each date by start time
-    for (const list of map.values()) {
-      list.sort((a, b) => a.startTime.localeCompare(b.startTime));
-    }
+      map.set(key, list);
+    });
+    for (const list of map.values()) list.sort((a, b) => a.startTime.localeCompare(b.startTime));
     return map;
-  }, [filteredBookings]);
+  }, [filtered]);
 
-  const todayStr = toISODate(todayDate);
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-
+  const todayStr = toISODate(today);
   const monthDays = useMemo(() => getDaysInMonth(year, month), [year, month]);
   const weekDays = useMemo(() => getWeekDates(currentDate), [currentDate]);
 
-  // Navigation handlers
-  function handlePrev() {
-    if (view === "month") {
-      setCurrentDate(new Date(year, month - 1, 1));
-    } else {
-      const prevWeek = new Date(currentDate);
-      prevWeek.setDate(currentDate.getDate() - 7);
-      setCurrentDate(prevWeek);
-    }
+  const rangeLabel = view === "month"
+    ? currentDate.toLocaleString("en-US", { month: "long", year: "numeric" })
+    : (() => { const s = weekDays[0], e = weekDays[6]; return `${s.toLocaleString("en-US", { month: "short" })} ${s.getDate()} – ${e.toLocaleString("en-US", { month: "short" })} ${e.getDate()}, ${e.getFullYear()}`; })();
+
+  function nav(dir: number) {
+    if (view === "month") setCurrentDate(new Date(year, month + dir, 1));
+    else { const d = new Date(currentDate); d.setDate(d.getDate() + dir * 7); setCurrentDate(d); }
   }
 
-  function handleNext() {
-    if (view === "month") {
-      setCurrentDate(new Date(year, month + 1, 1));
-    } else {
-      const nextWeek = new Date(currentDate);
-      nextWeek.setDate(currentDate.getDate() + 7);
-      setCurrentDate(nextWeek);
-    }
-  }
-
-  function handleToday() {
-    setCurrentDate(new Date());
-  }
-
-  function handleOpenCreate(dateStr?: string) {
+  function openCreate(dateStr?: string) {
     setEditingBooking(null);
     setFormDate(dateStr || todayStr);
     setFormOpen(true);
     onDayClick?.(dateStr || todayStr);
   }
 
-  function handleOpenDetail(booking: Booking) {
-    setDetailBooking(booking);
-    onBookingClick?.(booking._id);
-  }
-
-  function handleEditFromDetail(booking: Booking) {
-    setDetailBooking(null);
-    setEditingBooking(booking);
-    setFormOpen(true);
-  }
-
-  async function handleDeleteBooking(bookingId: Id<"bookings">) {
-    await removeBooking({ bookingId });
-    setDetailBooking(null);
-  }
-
-  // Header range label
-  const dateRangeLabel = useMemo(() => {
-    if (view === "month") {
-      return currentDate.toLocaleString("en-US", { month: "long", year: "numeric" });
-    } else {
-      const start = weekDays[0];
-      const end = weekDays[6];
-      const startMonth = start.toLocaleString("en-US", { month: "short" });
-      const endMonth = end.toLocaleString("en-US", { month: "short" });
-      if (startMonth === endMonth) {
-        return `${startMonth} ${start.getDate()} – ${end.getDate()}, ${end.getFullYear()}`;
-      }
-      return `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${end.getFullYear()}`;
-    }
-  }, [view, currentDate, weekDays]);
+  function openEdit(b: Booking) { setDetailBooking(null); setEditingBooking(b); setFormOpen(true); }
 
   return (
-    <div className="space-y-4 font-sans text-slate-200">
-      {/* Top Workspace Bar */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-white/[0.06] pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-white tracking-tight">Bookings & Schedule</h1>
-            <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-[10px] px-2 py-0.5">
-              Enterprise
-            </Badge>
-          </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Unified calendar workspace for client scheduling & meeting management.
-          </p>
-        </div>
-
-        {/* Stats Pill Breakdown */}
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <div className="flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-slate-300">
-            <CalendarIcon className="h-3.5 w-3.5 text-slate-400" />
-            <span className="font-semibold text-white">{stats.total}</span>
-            <span className="text-[11px] text-slate-400">Total</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-cyan-300">
-            <span className="h-2 w-2 rounded-full bg-cyan-400" />
-            <span className="font-semibold text-white">{stats.consultation}</span>
-            <span className="text-[11px] text-cyan-300/80">Consultation</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 rounded-lg border border-purple-500/20 bg-purple-500/10 px-2.5 py-1 text-purple-300">
-            <span className="h-2 w-2 rounded-full bg-purple-400" />
-            <span className="font-semibold text-white">{stats.development}</span>
-            <span className="text-[11px] text-purple-300/80">Development</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-emerald-300">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            <span className="font-semibold text-white">{stats.review}</span>
-            <span className="text-[11px] text-emerald-300/80">Review</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Control & Filter Toolbar */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-[#0c1222]/90 p-3 rounded-xl border border-white/[0.06]">
-        {/* Navigation & Range Header */}
+    <div className="flex flex-col gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handlePrev}
-              className="h-7 w-7 p-0 text-slate-300 hover:text-white hover:bg-white/10"
-              title="Previous"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleToday}
-              className="h-7 px-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10"
-            >
-              Today
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleNext}
-              className="h-7 w-7 p-0 text-slate-300 hover:text-white hover:bg-white/10"
-              title="Next"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <Button variant="ghost" size="sm" onClick={() => nav(-1)} className="h-7 w-7 p-0 text-slate-300 hover:text-white hover:bg-white/10"><ChevronLeft className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())} className="h-7 px-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/10">Today</Button>
+            <Button variant="ghost" size="sm" onClick={() => nav(1)} className="h-7 w-7 p-0 text-slate-300 hover:text-white hover:bg-white/10"><ChevronRight className="h-4 w-4" /></Button>
           </div>
-
-          <h2 className="text-sm font-semibold text-white px-2 tracking-tight">
-            {dateRangeLabel}
-          </h2>
+          <span className="text-sm font-semibold text-white">{rangeLabel}</span>
         </div>
-
-        {/* Filters, View Toggle & Action Button */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Client Filter */}
-          <Select value={selectedClientId} onValueChange={setSelectedClientId}>
-            <SelectTrigger className="h-8 w-[140px] text-xs bg-white/[0.03] border-white/10 text-slate-200">
-              <div className="flex items-center gap-1.5 truncate">
-                <User className="h-3 w-3 text-slate-400 shrink-0" />
-                <SelectValue placeholder="All Clients" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="border-white/10 bg-[#0f172a] text-white">
-              <SelectItem value="all" className="text-xs">
-                All Clients
-              </SelectItem>
-              {clients?.map((c) => (
-                <SelectItem key={c._id} value={c._id} className="text-xs">
-                  {c.name}
-                </SelectItem>
-              ))}
+        <div className="flex items-center gap-2">
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="h-7 w-[120px] text-xs bg-white/[0.03] border-white/10"><SelectValue placeholder="All Types" /></SelectTrigger>
+            <SelectContent className="bg-[#0c1222] border-white/10">
+              <SelectItem value="all" className="text-xs">All Types</SelectItem>
+              <SelectItem value="consultation" className="text-xs">Consultation</SelectItem>
+              <SelectItem value="development" className="text-xs">Development</SelectItem>
+              <SelectItem value="review" className="text-xs">Review</SelectItem>
             </SelectContent>
           </Select>
-
-          {/* Type Filter */}
-          <Select value={selectedType} onValueChange={setSelectedType}>
-            <SelectTrigger className="h-8 w-[130px] text-xs bg-white/[0.03] border-white/10 text-slate-200">
-              <div className="flex items-center gap-1.5 truncate">
-                <Filter className="h-3 w-3 text-slate-400 shrink-0" />
-                <SelectValue placeholder="All Types" />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="border-white/10 bg-[#0f172a] text-white">
-              <SelectItem value="all" className="text-xs">
-                All Types
-              </SelectItem>
-              <SelectItem value="consultation" className="text-xs text-cyan-400">
-                Consultation
-              </SelectItem>
-              <SelectItem value="development" className="text-xs text-purple-400">
-                Development
-              </SelectItem>
-              <SelectItem value="review" className="text-xs text-emerald-400">
-                Review
-              </SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* View Toggle (Month / Week) */}
           <div className="flex items-center rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-            <button
-              type="button"
-              onClick={() => setView("month")}
-              className={cn(
-                "h-7 px-3 rounded-md text-xs font-medium transition-all",
-                view === "month"
-                  ? "bg-cyan-600/90 text-white shadow-sm font-semibold"
-                  : "text-slate-400 hover:text-white"
-              )}
-            >
-              Month
-            </button>
-            <button
-              type="button"
-              onClick={() => setView("week")}
-              className={cn(
-                "h-7 px-3 rounded-md text-xs font-medium transition-all",
-                view === "week"
-                  ? "bg-cyan-600/90 text-white shadow-sm font-semibold"
-                  : "text-slate-400 hover:text-white"
-              )}
-            >
-              Week
-            </button>
+            {(["month", "week"] as const).map((v) => (
+              <button key={v} type="button" onClick={() => setView(v)} className={cn("h-7 px-3 rounded-md text-xs font-medium transition-all", view === v ? "bg-seridian-500/20 text-seridian-400" : "text-slate-400 hover:text-white")}>
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
           </div>
-
-          {/* Quick Create Button */}
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => handleOpenCreate()}
-            className="h-8 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-medium px-3 gap-1 shadow-sm"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Quick Booking</span>
-          </Button>
+          <Button size="sm" onClick={() => openCreate()} className="h-7 bg-seridian-500 text-white hover:bg-seridian-400 text-xs"><Plus className="h-3.5 w-3.5 mr-1" />New</Button>
         </div>
       </div>
 
-      {/* Main Workspace Calendar View */}
+      {/* Calendar Grid */}
       {view === "month" ? (
-        /* MONTHLY VIEW GRID */
-        <div className="rounded-xl border border-white/[0.06] bg-[#0c1222]/90 overflow-hidden shadow-xl">
-          {/* Weekday Header */}
+        <div className="rounded-lg border border-white/[0.06] bg-[#0c1222]/80 overflow-hidden">
           <div className="grid grid-cols-7 border-b border-white/[0.06] bg-white/[0.02]">
-            {WEEKDAYS.map((d) => (
-              <div
-                key={d}
-                className="py-2 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider border-r border-white/[0.04] last:border-r-0"
-              >
-                {d}
-              </div>
-            ))}
+            {WEEKDAYS.map((d) => <div key={d} className="py-1.5 text-center text-[10px] font-semibold text-slate-500 uppercase">{d}</div>)}
           </div>
-
-          {/* Day Grid */}
-          <div className="grid grid-cols-7 divide-x divide-y divide-white/[0.04] bg-[#0c1222]">
+          <div className="grid grid-cols-7 divide-x divide-y divide-white/[0.04]">
             {monthDays.map((day, i) => {
               const dateStr = toISODate(day);
-              const isCurrentMonth = day.getMonth() === month;
+              const isCurrent = day.getMonth() === month;
               const isToday = dateStr === todayStr;
-              const dayBookings = bookingsByDate.get(dateStr) ?? [];
-
+              const dayBookings = byDate.get(dateStr) ?? [];
               return (
-                <div
-                  key={i}
-                  className={cn(
-                    "group relative min-h-[110px] p-1.5 transition-colors text-left flex flex-col justify-between",
-                    isCurrentMonth ? "bg-transparent text-slate-200" : "bg-white/[0.01] text-slate-600",
-                    "hover:bg-white/[0.02]"
-                  )}
-                >
-                  {/* Top Bar of Cell */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={cn(
-                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-all",
-                        isToday
-                          ? "bg-cyan-500 text-white font-bold ring-2 ring-cyan-400/40 shadow-sm"
-                          : isCurrentMonth
-                          ? "text-slate-300 font-semibold"
-                          : "text-slate-600"
-                      )}
-                    >
-                      {day.getDate()}
-                    </span>
-
-                    {/* Hover '+' Quick Add Button */}
-                    <button
-                      type="button"
-                      onClick={() => handleOpenCreate(dateStr)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded bg-white/10 hover:bg-cyan-500/20 hover:text-cyan-300 text-slate-400"
-                      title={`Schedule on ${dateStr}`}
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                    </button>
+                <div key={i} className={cn("group min-h-[80px] p-1 transition-colors hover:bg-white/[0.02]", isCurrent ? "text-slate-200" : "text-slate-600")}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-medium", isToday ? "bg-seridian-500 text-white" : isCurrent ? "text-slate-300" : "text-slate-600")}>{day.getDate()}</span>
+                    <button type="button" onClick={() => openCreate(dateStr)} className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-slate-400 hover:text-seridian-400"><Plus className="h-3 w-3" /></button>
                   </div>
-
-                  {/* Booking Chips Container */}
-                  <div className="mt-1 flex-1 flex flex-col gap-1 overflow-hidden">
-                    {dayBookings.slice(0, 3).map((b) => {
-                      const cfg = TYPE_CONFIG[b.type];
-                      const client = clientMap.get(b.clientId);
-                      const Icon = cfg.icon;
-
+                  <div className="space-y-0.5">
+                    {dayBookings.slice(0, 2).map((b) => {
+                      const cfg = TYPE_COLORS[b.type] ?? TYPE_COLORS.consultation;
                       return (
-                        <div
-                          key={b._id}
-                          onClick={() => handleOpenDetail(b)}
-                          className={cn(
-                            "cursor-pointer flex items-center justify-between rounded px-1.5 py-0.5 border text-[11px] transition-all truncate",
-                            cfg.bg,
-                            "hover:scale-[1.01] hover:brightness-125"
-                          )}
-                          title={`${b.title} (${formatTime(b.startTime)})`}
-                        >
-                          <div className="flex items-center gap-1 min-w-0 truncate">
-                            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", cfg.dot)} />
-                            <span className="font-semibold text-white truncate max-w-[80px]">
-                              {b.title}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0 text-[10px] text-slate-400">
-                            <span>{formatTime(b.startTime)}</span>
-                          </div>
-                        </div>
+                        <button key={b._id} type="button" onClick={() => setDetailBooking(b)} className={cn("w-full flex items-center gap-1 rounded px-1 py-0.5 text-[10px] border truncate text-left", cfg.bg)}>
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", cfg.dot)} />
+                          <span className="truncate font-medium">{b.title}</span>
+                        </button>
                       );
                     })}
-
-                    {dayBookings.length > 3 && (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenCreate(dateStr)}
-                        className="text-[10px] font-medium text-cyan-400 hover:underline pl-1 text-left"
-                      >
-                        +{dayBookings.length - 3} more
-                      </button>
-                    )}
+                    {dayBookings.length > 2 && <span className="text-[9px] text-slate-500 pl-1">+{dayBookings.length - 2}</span>}
                   </div>
                 </div>
               );
@@ -568,120 +189,49 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
           </div>
         </div>
       ) : (
-        /* WEEKLY VIEW GRID */
-        <div className="rounded-xl border border-white/[0.06] bg-[#0c1222]/90 overflow-hidden shadow-xl">
-          {/* Weekday Column Headers */}
+        <div className="rounded-lg border border-white/[0.06] bg-[#0c1222]/80 overflow-hidden">
           <div className="grid grid-cols-7 border-b border-white/[0.06] bg-white/[0.02]">
-            {weekDays.map((d, idx) => {
+            {weekDays.map((d, i) => {
               const dateStr = toISODate(d);
               const isToday = dateStr === todayStr;
-              const count = (bookingsByDate.get(dateStr) ?? []).length;
-
+              const count = (byDate.get(dateStr) ?? []).length;
               return (
-                <div
-                  key={idx}
-                  className={cn(
-                    "p-3 text-center border-r border-white/[0.04] last:border-r-0 flex flex-col items-center justify-center gap-1",
-                    isToday && "bg-cyan-500/5"
-                  )}
-                >
-                  <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">
-                    {WEEKDAYS[idx]}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={cn(
-                        "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
-                        isToday
-                          ? "bg-cyan-500 text-white ring-2 ring-cyan-400/40"
-                          : "text-white"
-                      )}
-                    >
-                      {d.getDate()}
-                    </span>
-                    {count > 0 && (
-                      <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/20 text-cyan-300 text-[10px] px-1.5 py-0">
-                        {count}
-                      </Badge>
-                    )}
+                <div key={i} className={cn("p-2 text-center border-r border-white/[0.04] last:border-r-0", isToday && "bg-seridian-500/5")}>
+                  <span className="text-[10px] text-slate-500 uppercase">{WEEKDAYS[i]}</span>
+                  <div className="flex items-center justify-center gap-1 mt-0.5">
+                    <span className={cn("flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold", isToday ? "bg-seridian-500 text-white" : "text-white")}>{d.getDate()}</span>
+                    {count > 0 && <Badge variant="outline" className="text-[9px] px-1 py-0 border-seridian-500/30 bg-seridian-500/10 text-seridian-400">{count}</Badge>}
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenCreate(dateStr)}
-                    className="mt-1 flex items-center gap-0.5 text-[10px] text-slate-400 hover:text-cyan-300"
-                  >
-                    <Plus className="h-3 w-3" />
-                    <span>Add</span>
-                  </button>
+                  <button type="button" onClick={() => openCreate(dateStr)} className="mt-0.5 text-[9px] text-slate-500 hover:text-seridian-400">+ Add</button>
                 </div>
               );
             })}
           </div>
-
-          {/* Week Day Schedule Cards Grid */}
-          <div className="grid grid-cols-7 divide-x divide-white/[0.04] bg-[#0c1222] min-h-[450px]">
-            {weekDays.map((d, idx) => {
+          <div className="grid grid-cols-7 divide-x divide-white/[0.04] min-h-[300px]">
+            {weekDays.map((d, i) => {
               const dateStr = toISODate(d);
-              const dayBookings = bookingsByDate.get(dateStr) ?? [];
-
+              const dayBookings = byDate.get(dateStr) ?? [];
               return (
-                <div key={idx} className="p-2 space-y-2 flex flex-col justify-start">
+                <div key={i} className="p-1.5 space-y-1.5">
                   {dayBookings.length === 0 ? (
-                    <div
-                      onClick={() => handleOpenCreate(dateStr)}
-                      className="cursor-pointer group flex flex-col items-center justify-center h-32 rounded-lg border border-dashed border-white/5 hover:border-cyan-500/30 hover:bg-cyan-500/5 transition-all text-slate-600 hover:text-cyan-400"
-                    >
-                      <Plus className="h-4 w-4 mb-1 opacity-40 group-hover:opacity-100" />
-                      <span className="text-[10px]">No meetings</span>
-                    </div>
-                  ) : (
-                    dayBookings.map((b) => {
-                      const cfg = TYPE_CONFIG[b.type];
-                      const client = clientMap.get(b.clientId);
-                      const duration = getDurationMinutes(b.startTime, b.endTime);
-
-                      return (
-                        <div
-                          key={b._id}
-                          onClick={() => handleOpenDetail(b)}
-                          className={cn(
-                            "cursor-pointer rounded-lg border p-2.5 transition-all shadow-sm flex flex-col gap-1.5",
-                            cfg.bg,
-                            "hover:brightness-125 hover:scale-[1.02]"
-                          )}
-                        >
-                          <div className="flex items-center justify-between gap-1">
-                            <div className="flex items-center gap-1.5 truncate">
-                              <span className={cn("h-2 w-2 rounded-full shrink-0", cfg.dot)} />
-                              <span className="font-bold text-xs text-white truncate">
-                                {b.title}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 text-[10px] text-slate-300">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 text-slate-400" />
-                              <span>
-                                {formatTime(b.startTime)} - {formatTime(b.endTime)}
-                              </span>
-                            </div>
-                            {duration > 0 && (
-                              <span className="text-[9px] text-slate-400">({duration}m)</span>
-                            )}
-                          </div>
-
-                          {client && (
-                            <div className="flex items-center gap-1 text-[10px] text-cyan-300/90 font-medium truncate pt-1 border-t border-white/10">
-                              <User className="h-3 w-3 shrink-0 text-slate-400" />
-                              <span className="truncate">{client.name}</span>
-                            </div>
-                          )}
+                    <button type="button" onClick={() => openCreate(dateStr)} className="w-full h-20 rounded border border-dashed border-white/5 text-[10px] text-slate-600 hover:border-seridian-500/30 hover:text-seridian-400 transition-colors">+ Add</button>
+                  ) : dayBookings.map((b) => {
+                    const cfg = TYPE_COLORS[b.type] ?? TYPE_COLORS.consultation;
+                    const client = clientMap.get(b.clientId);
+                    return (
+                      <button key={b._id} type="button" onClick={() => setDetailBooking(b)} className={cn("w-full rounded-lg border p-2 text-left transition-all hover:brightness-110", cfg.bg)}>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", cfg.dot)} />
+                          <span className="text-[11px] font-semibold text-white truncate">{b.title}</span>
                         </div>
-                      );
-                    })
-                  )}
+                        <div className="flex items-center gap-1 text-[9px] text-slate-400">
+                          <Clock className="h-2.5 w-2.5" />
+                          <span>{formatTime(b.startTime)}</span>
+                        </div>
+                        {client && <div className="text-[9px] text-slate-400 mt-0.5 truncate">{client.name}</div>}
+                      </button>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -689,150 +239,39 @@ export function BookingCalendar({ onDayClick, onBookingClick }: BookingCalendarP
         </div>
       )}
 
-      {/* CREATE / EDIT BOOKING DIALOG */}
+      {/* Create/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg border-white/10 bg-[#0c1222] text-white">
-          <DialogHeader>
-            <DialogTitle className="text-base font-semibold text-white flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4 text-cyan-400" />
-              <span>{editingBooking ? "Edit Booking" : "New Booking"}</span>
-            </DialogTitle>
-          </DialogHeader>
-          <BookingForm
-            booking={editingBooking || undefined}
-            defaultDate={formDate}
-            onSuccess={() => setFormOpen(false)}
-            onCancel={() => setFormOpen(false)}
-          />
+        <DialogContent className="max-w-lg border-white/[0.06] bg-[#0c1222]">
+          <DialogHeader><DialogTitle className="text-white text-sm">{editingBooking ? "Edit Booking" : "New Booking"}</DialogTitle></DialogHeader>
+          <BookingForm booking={editingBooking ?? undefined} defaultDate={formDate} onSuccess={() => setFormOpen(false)} onCancel={() => setFormOpen(false)} />
         </DialogContent>
       </Dialog>
 
-      {/* BOOKING DETAIL DIALOG */}
-      <Dialog open={!!detailBooking} onOpenChange={(open) => !open && setDetailBooking(null)}>
+      {/* Detail Dialog */}
+      <Dialog open={!!detailBooking} onOpenChange={(o) => !o && setDetailBooking(null)}>
         {detailBooking && (
-          <DialogContent className="max-w-md border-white/10 bg-[#0c1222] text-white p-5 space-y-4">
-            {/* Header Badge & Title */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-xs px-2.5 py-0.5 font-medium flex items-center gap-1.5",
-                    TYPE_CONFIG[detailBooking.type].badgeBg
-                  )}
-                >
-                  <span className={cn("h-2 w-2 rounded-full", TYPE_CONFIG[detailBooking.type].dot)} />
-                  <span>{TYPE_CONFIG[detailBooking.type].label}</span>
-                </Badge>
-
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditFromDetail(detailBooking)}
-                    className="h-7 px-2 text-xs text-slate-300 hover:text-white hover:bg-white/10 gap-1"
-                  >
-                    <Edit3 className="h-3.5 w-3.5" />
-                    <span>Edit</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteBooking(detailBooking._id)}
-                    className="h-7 px-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/20 gap-1"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+          <DialogContent className="max-w-sm border-white/[0.06] bg-[#0c1222] p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <Badge variant="outline" className={cn("text-[10px] mb-1", TYPE_COLORS[detailBooking.type]?.bg)}>{detailBooking.type}</Badge>
+                <h3 className="text-sm font-semibold text-white">{detailBooking.title}</h3>
               </div>
-
-              <h3 className="text-lg font-semibold text-white tracking-tight">
-                {detailBooking.title}
-              </h3>
-            </div>
-
-            {/* Linked Client Section */}
-            {(() => {
-              const client = clientMap.get(detailBooking.clientId);
-              if (!client) return null;
-              return (
-                <div className="rounded-lg border border-white/[0.08] bg-white/[0.02] p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-300 font-bold text-xs">
-                      {client.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-white">{client.name}</div>
-                      <div className="text-[11px] text-slate-400">{client.company}</div>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/dashboard/clients?selected=${client._id}`}
-                    className="flex items-center gap-1 text-[11px] text-cyan-400 hover:underline font-medium"
-                  >
-                    <span>Dossier</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </Link>
-                </div>
-              );
-            })()}
-
-            {/* Time & Duration */}
-            <div className="space-y-1.5 text-xs text-slate-300 bg-white/[0.02] p-3 rounded-lg border border-white/[0.06]">
-              <div className="flex items-center gap-2 font-medium text-white">
-                <Clock className="h-4 w-4 text-cyan-400" />
-                <span>{formatFullDate(detailBooking.startTime)}</span>
-              </div>
-              <div className="pl-6 text-slate-400 text-xs flex items-center justify-between">
-                <span>
-                  {formatTime(detailBooking.startTime)} – {formatTime(detailBooking.endTime)}
-                </span>
-                <span className="text-[11px] text-cyan-300">
-                  {getDurationMinutes(detailBooking.startTime, detailBooking.endTime)} min
-                </span>
+              <div className="flex gap-1">
+                <Button variant="ghost" size="sm" onClick={() => openEdit(detailBooking)} className="h-6 px-1.5 text-xs text-slate-400 hover:text-white"><Edit3 className="h-3 w-3" /></Button>
+                <Button variant="ghost" size="sm" onClick={() => { removeBooking({ bookingId: detailBooking._id }); setDetailBooking(null); }} className="h-6 px-1.5 text-xs text-red-400 hover:text-red-300"><Trash2 className="h-3 w-3" /></Button>
               </div>
             </div>
-
-            {/* Location & Meeting Link */}
-            {(detailBooking.location || detailBooking.meetingUrl) && (
-              <div className="space-y-2 text-xs">
-                {detailBooking.location && (
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span>{detailBooking.location}</span>
-                  </div>
-                )}
-
-                {detailBooking.meetingUrl && (
-                  <a
-                    href={detailBooking.meetingUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 px-3 transition-colors shadow-sm text-xs"
-                  >
-                    <Video className="h-4 w-4" />
-                    <span>Join Video Call</span>
-                    <ExternalLink className="h-3.5 w-3.5 ml-auto" />
-                  </a>
-                )}
+            {clientMap.get(detailBooking.clientId) && (
+              <div className="flex items-center gap-2 text-xs text-slate-300">
+                <User className="h-3 w-3 text-slate-500" />
+                <span>{clientMap.get(detailBooking.clientId)!.name}</span>
               </div>
             )}
-
-            {/* Agenda / Notes */}
-            {detailBooking.notes && (
-              <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-1.5 font-medium text-slate-400 text-[11px] uppercase tracking-wider">
-                  <FileText className="h-3 w-3" />
-                  <span>Notes</span>
-                </div>
-                <p className="text-slate-300 bg-white/[0.02] p-2.5 rounded-lg border border-white/[0.06] whitespace-pre-wrap leading-relaxed">
-                  {detailBooking.notes}
-                </p>
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-xs text-slate-300">
+              <Clock className="h-3 w-3 text-slate-500" />
+              <span>{new Date(detailBooking.startTime).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} · {formatTime(detailBooking.startTime)} – {formatTime(detailBooking.endTime)}</span>
+            </div>
+            {detailBooking.notes && <p className="text-xs text-slate-400 bg-white/[0.02] rounded p-2">{detailBooking.notes}</p>}
           </DialogContent>
         )}
       </Dialog>

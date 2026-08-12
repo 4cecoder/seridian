@@ -1,9 +1,13 @@
-/**
- * Activity feed types and utilities for the dashboard overview.
- *
- * Activities are derived from existing Convex entities (issues, deals,
- * bookings, proposals, clients) rather than a dedicated activity log.
- */
+import {
+  CheckCircle,
+  CheckSquare,
+  DollarSign,
+  ArrowRight,
+  Calendar,
+  Send,
+  UserPlus,
+  type LucideIcon,
+} from "lucide-react";
 
 export type ActivityType =
   | "issue_created"
@@ -25,10 +29,6 @@ export interface Activity {
   entityType?: string;
 }
 
-// ---------------------------------------------------------------------------
-// Date helpers
-// ---------------------------------------------------------------------------
-
 const DAY_MS = 86_400_000;
 
 function startOfDay(date: Date): Date {
@@ -40,88 +40,54 @@ function startOfDay(date: Date): Date {
 function formatDateLabel(date: Date): string {
   const now = startOfDay(new Date());
   const target = startOfDay(date);
-
   const diff = now.getTime() - target.getTime();
-  if (diff < 0) return "Upcoming";
+
   if (diff < DAY_MS) return "Today";
   if (diff < 2 * DAY_MS) return "Yesterday";
-  return "Earlier";
+  if (diff < 7 * DAY_MS) return "Earlier this week";
+
+  const date2 = new Date(date);
+  return date2.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-/**
- * Group activities by day labels: "Today", "Yesterday", "Earlier".
- * Returns an ordered Map from most recent to oldest.
- */
-export function groupByDate(activities: Activity[]): Map<string, Activity[]> {
-  const grouped = new Map<string, Activity[]>();
-
-  for (const activity of [...activities].sort((a, b) => b.timestamp - a.timestamp)) {
-    const label = formatDateLabel(new Date(activity.timestamp));
-    const existing = grouped.get(label);
-    if (existing) {
-      existing.push(activity);
-    } else {
-      grouped.set(label, [activity]);
-    }
-  }
-
-  return grouped;
-}
-
-// ---------------------------------------------------------------------------
-// Relative time
-// ---------------------------------------------------------------------------
-
-/**
- * Return a human-readable relative time string (e.g. "5m ago", "2h ago",
- * "Yesterday", "3d ago").
- */
 export function timeAgo(timestamp: number): string {
-  const now = Date.now();
-  const diff = now - timestamp;
-
-  if (diff < 0) return "just now";
-
-  const seconds = Math.floor(diff / 1_000);
-  if (seconds < 60) return "just now";
-
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return "Just now";
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
-
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
-
   const days = Math.floor(hours / 24);
   if (days === 1) return "Yesterday";
   if (days < 7) return `${days}d ago`;
-
   const weeks = Math.floor(days / 7);
   if (weeks < 4) return `${weeks}w ago`;
-
-  // Fallback to absolute date
-  const date = new Date(timestamp);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  return formatDateLabel(new Date(timestamp));
 }
 
-// ---------------------------------------------------------------------------
-// Activity icons (text-based, no extra dependencies)
-// ---------------------------------------------------------------------------
+export function groupByDate(activities: Activity[]): Map<string, Activity[]> {
+  const groups = new Map<string, Activity[]>();
+  for (const activity of activities.sort((a, b) => b.timestamp - a.timestamp)) {
+    const label = formatDateLabel(new Date(activity.timestamp));
+    const group = groups.get(label) ?? [];
+    group.push(activity);
+    groups.set(label, group);
+  }
+  return groups;
+}
 
-const ACTIVITY_ICONS: Record<ActivityType, string> = {
-  issue_created: "☐",
-  issue_updated: "☑",
-  deal_created: "▭",
-  deal_stage_changed: "▷",
-  booking_created: "◷",
-  proposal_sent: "✉",
-  client_added: "◎",
+const ACTIVITY_ICONS: Record<ActivityType, LucideIcon> = {
+  issue_created: CheckCircle,
+  issue_updated: CheckSquare,
+  deal_created: DollarSign,
+  deal_stage_changed: ArrowRight,
+  booking_created: Calendar,
+  proposal_sent: Send,
+  client_added: UserPlus,
 };
 
-export function getActivityIcon(type: ActivityType): string {
-  return ACTIVITY_ICONS[type] ?? "•";
+export function getActivityIcon(type: ActivityType): LucideIcon {
+  return ACTIVITY_ICONS[type] ?? CheckCircle;
 }
 
 const ACTIVITY_COLORS: Record<ActivityType, string> = {

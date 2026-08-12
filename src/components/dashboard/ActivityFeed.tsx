@@ -150,13 +150,14 @@ function buildActivities(
 // ---------------------------------------------------------------------------
 
 function ActivityItem({ activity }: { activity: Activity }) {
+  const Icon = getActivityIcon(activity.type);
   return (
     <div className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.03]">
       <div
-        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs ${getActivityColor(activity.type)}`}
+        className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${getActivityColor(activity.type)}`}
         aria-hidden="true"
       >
-        {getActivityIcon(activity.type)}
+        <Icon className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-slate-200 truncate">

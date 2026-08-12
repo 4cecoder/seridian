@@ -74,9 +74,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useNotifications() {
+const noop = () => {};
+
+const fallbackState: NotificationState = {
+  notifications: [],
+  unreadCount: 0,
+  addNotification: noop,
+  markRead: noop,
+  markAllRead: noop,
+  clear: noop,
+  clearAll: noop,
+};
+
+export function useNotifications(): NotificationState {
   const ctx = useContext(NotificationContext);
-  if (!ctx)
-    throw new Error("useNotifications must be used within NotificationProvider");
+  if (!ctx) return fallbackState;
   return ctx;
 }

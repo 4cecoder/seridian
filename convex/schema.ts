@@ -148,6 +148,7 @@ export default defineSchema({
     pubkey: v.string(),
     name: v.string(),
     email: v.optional(v.string()),
+    password: v.optional(v.string()),
     avatar: v.optional(v.string()),
     status: v.union(v.literal("online"), v.literal("offline"), v.literal("away")),
     lastSeen: v.number(),

@@ -242,7 +242,7 @@ function SettingsContent() {
 
         {/* TAB 3: SECRETS & API KEYS (ADMIN ONLY) */}
         <TabsContent value="secrets" className="space-y-4 pt-2">
-          <SecretsVault currentUserId="d" />
+          <SecretsVault currentUserId="dee" />
         </TabsContent>
 
         {/* TAB 4: AI AGENT STUDIO */}

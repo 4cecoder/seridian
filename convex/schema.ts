@@ -139,8 +139,9 @@ export default defineSchema({
     name: v.string(),
     maskedValue: v.string(),
     description: v.optional(v.string()),
-    category: v.union(v.literal("linear"), v.literal("github"), v.literal("convex"), v.literal("other")),
+    category: v.string(),
     updatedBy: v.string(),
+    createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_name", ["name"]),
 

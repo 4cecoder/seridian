@@ -35,3 +35,23 @@ export const get = query({
     return await ctx.db.get(args.channelId);
   },
 });
+
+export const remove = mutation({
+  args: { channelId: v.id("channels") },
+  handler: async (ctx, args) => {
+    const channel = await ctx.db.get(args.channelId);
+    if (!channel) throw new Error("Channel not found");
+
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_channelId_and_createdAt", (q) => q.eq("channelId", args.channelId))
+      .take(500);
+
+    for (const msg of messages) {
+      await ctx.db.delete(msg._id);
+    }
+
+    await ctx.db.delete(args.channelId);
+    return args.channelId;
+  },
+});

@@ -181,6 +181,7 @@ export const updateUserStatus = mutation({
     status: v.union(v.literal("online"), v.literal("offline"), v.literal("away")),
     name: v.string(),
     email: v.optional(v.string()),
+    password: v.optional(v.string()),
     avatar: v.optional(v.string()),
     deviceType: v.optional(
       v.union(v.literal("web"), v.literal("android"), v.literal("ios")),
@@ -198,6 +199,7 @@ export const updateUserStatus = mutation({
         lastSeen: now,
         name: args.name,
         ...(args.email !== undefined && { email: args.email }),
+        ...(args.password !== undefined && { password: args.password }),
         ...(args.avatar !== undefined && { avatar: args.avatar }),
         ...(args.deviceType !== undefined && { deviceType: args.deviceType }),
       });
@@ -207,10 +209,46 @@ export const updateUserStatus = mutation({
       pubkey: args.pubkey,
       name: args.name,
       email: args.email,
+      password: args.password,
       avatar: args.avatar,
       status: args.status,
       lastSeen: now,
       deviceType: args.deviceType,
     });
+  },
+});
+
+export const login = mutation({
+  args: {
+    pubkey: v.string(),
+    password: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_pubkey", (q) => q.eq("pubkey", args.pubkey))
+      .unique();
+
+    if (!user) {
+      return { ok: false as const, error: "User not found" };
+    }
+
+    if (user.password && user.password !== args.password) {
+      return { ok: false as const, error: "Invalid password" };
+    }
+
+    await ctx.db.patch(user._id, {
+      status: "online",
+      lastSeen: Date.now(),
+    });
+
+    return {
+      ok: true as const,
+      user: {
+        pubkey: user.pubkey,
+        name: user.name,
+        email: user.email,
+      },
+    };
   },
 });

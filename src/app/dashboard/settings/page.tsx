@@ -66,6 +66,7 @@ function UserForm({ user, onClose }: { user?: User; onClose: () => void }) {
   const [name, setName] = useState(user?.name ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [pubkey, setPubkey] = useState(user?.pubkey ?? "");
+  const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -77,6 +78,7 @@ function UserForm({ user, onClose }: { user?: User; onClose: () => void }) {
         pubkey: pubkey.trim(),
         name: name.trim(),
         email: email.trim() || undefined,
+        password: password.trim() || undefined,
         status: "offline",
       });
       onClose();
@@ -102,6 +104,10 @@ function UserForm({ user, onClose }: { user?: User; onClose: () => void }) {
         <div className="space-y-1.5">
           <Label className="text-xs text-slate-400">Email</Label>
           <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="john@example.com" className="bg-white/5 border-white/10" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs text-slate-400">Password {user && "(leave blank to keep current)"}</Label>
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={user ? "••••••" : "Set password"} className="bg-white/5 border-white/10" />
         </div>
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="ghost" onClick={onClose} className="text-slate-400">Cancel</Button>

@@ -408,9 +408,9 @@ export function MessageList({
   );
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-thin flex flex-col justify-end">
+    <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-thin flex flex-col">
       {messages === undefined ? (
-        <div className="flex h-full items-center justify-center p-6">
+        <div className="flex flex-1 items-center justify-center p-6">
           <div className="space-y-4 w-full max-w-md">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="flex items-start gap-3">
@@ -424,23 +424,28 @@ export function MessageList({
           </div>
         </div>
       ) : filteredMessages.length === 0 ? (
-        <div className="flex h-full flex-col items-center justify-center p-8 text-center my-auto">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-400 mb-3">
-            <Sparkles className="h-6 w-6 text-cyan-400" />
+        <div className="flex flex-1 items-center justify-center p-8 text-center">
+          <div>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-400 mb-3">
+              <Sparkles className="h-6 w-6 text-cyan-400" />
+            </div>
+            <h4 className="text-sm font-semibold text-slate-200 mb-1">
+              {searchQuery || agentFilter !== "all"
+                ? "No matching messages found"
+                : "Welcome to the Channel"}
+            </h4>
+            <p className="text-xs text-slate-500 max-w-sm">
+              {searchQuery || agentFilter !== "all"
+                ? "Try adjusting your search criteria or agent filter."
+                : "Start the conversation or trigger @SeridianAI to orchestrate tasks."}
+            </p>
           </div>
-          <h4 className="text-sm font-semibold text-slate-200 mb-1">
-            {searchQuery || agentFilter !== "all"
-              ? "No matching messages found"
-              : "Welcome to the Channel"}
-          </h4>
-          <p className="text-xs text-slate-500 max-w-sm">
-            {searchQuery || agentFilter !== "all"
-              ? "Try adjusting your search criteria or agent filter."
-              : "Start the conversation or trigger @SeridianAI to orchestrate tasks."}
-          </p>
         </div>
       ) : (
-        <div className="pb-4 mt-auto w-full">
+        <div className="flex-1" />
+      )}
+      {messages !== undefined && filteredMessages.length > 0 && (
+        <div className="pb-4 px-1">
           {sortedDates.map((dateKey) => {
             const group = messagesByDate.get(dateKey) ?? [];
             return (

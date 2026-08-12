@@ -20,9 +20,10 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@bytecats/ui-kit";
-import { Settings, Users, UserPlus, Trash2, Mail, Shield, Clock, RefreshCw, Layers, GitBranch, Bot } from "lucide-react";
+import { Settings, Users, UserPlus, Trash2, Mail, Shield, Clock, RefreshCw, Layers, GitBranch, Bot, Key } from "lucide-react";
 import { DashboardGuard } from "@/components/dashboard/DashboardGuard";
 import { SyncDashboard } from "@/components/sync/SyncDashboard";
+import { SecretsVault } from "@/components/settings/SecretsVault";
 
 type User = Doc<"users">;
 
@@ -185,6 +186,13 @@ function SettingsContent() {
               Linear + GitHub
             </Badge>
           </TabsTrigger>
+          <TabsTrigger value="secrets" className="gap-2 text-xs font-medium">
+            <Key className="h-4 w-4 text-amber-400" />
+            API Keys & Secrets
+            <Badge variant="secondary" className="ml-1 text-[10px] bg-amber-500/20 text-amber-300">
+              Admin Only
+            </Badge>
+          </TabsTrigger>
           <TabsTrigger value="agents" className="gap-2 text-xs font-medium">
             <Bot className="h-4 w-4 text-cyan-400" />
             AI Agent Studio
@@ -232,7 +240,12 @@ function SettingsContent() {
           </div>
         </TabsContent>
 
-        {/* TAB 3: AI AGENT STUDIO */}
+        {/* TAB 3: SECRETS & API KEYS (ADMIN ONLY) */}
+        <TabsContent value="secrets" className="space-y-4 pt-2">
+          <SecretsVault currentUserId="d" />
+        </TabsContent>
+
+        {/* TAB 4: AI AGENT STUDIO */}
         <TabsContent value="agents" className="space-y-4 pt-2">
           <div className="rounded-xl border border-white/[0.08] bg-[#0c1222]/80 p-6 space-y-6">
             <div>

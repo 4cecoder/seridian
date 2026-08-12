@@ -75,6 +75,7 @@ export const getGitHubStats = query({
     }
 
     return {
+      isConfigured: !!process.env.GITHUB_TOKEN,
       totalIssues: issues.length,
       totalProjects: projects.length,
       issuesByState,

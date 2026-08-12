@@ -27,9 +27,13 @@ export function GitHubSyncStatus() {
     setLastResult(null);
     try {
       const result = await syncAll({});
-      setLastResult(
-        `Synced ${result.issues.total} issues (${result.issues.created} new, ${result.issues.updated} updated) and ${result.projects.total} projects`,
-      );
+      if (!result.configured) {
+        setLastResult("GitHub token is not configured. Add GITHUB_TOKEN to your Convex environment.");
+      } else {
+        setLastResult(
+          `Synced ${result.issues.total} issues (${result.issues.created} new, ${result.issues.updated} updated) and ${result.projects.total} projects`,
+        );
+      }
     } catch (err) {
       setLastResult(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
@@ -42,9 +46,13 @@ export function GitHubSyncStatus() {
     setLastResult(null);
     try {
       const result = await syncIssues({});
-      setLastResult(
-        `Synced ${result.total} issues (${result.created} new, ${result.updated} updated)`,
-      );
+      if ("configured" in result && !result.configured) {
+        setLastResult("GitHub token is not configured. Add GITHUB_TOKEN to your Convex environment.");
+      } else {
+        setLastResult(
+          `Synced ${result.total} issues (${result.created} new, ${result.updated} updated)`,
+        );
+      }
     } catch (err) {
       setLastResult(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
@@ -57,9 +65,13 @@ export function GitHubSyncStatus() {
     setLastResult(null);
     try {
       const result = await syncProjects({});
-      setLastResult(
-        `Synced ${result.total} projects (${result.created} new, ${result.updated} updated)`,
-      );
+      if ("configured" in result && !result.configured) {
+        setLastResult("GitHub token is not configured. Add GITHUB_TOKEN to your Convex environment.");
+      } else {
+        setLastResult(
+          `Synced ${result.total} projects (${result.created} new, ${result.updated} updated)`,
+        );
+      }
     } catch (err) {
       setLastResult(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
@@ -75,6 +87,7 @@ export function GitHubSyncStatus() {
     );
   }
 
+  const isConfigured = stats.isConfigured ?? false;
   const issueStates = Object.entries(stats.issuesByState);
   const projectStates = Object.entries(stats.projectsByState);
 
@@ -84,16 +97,18 @@ export function GitHubSyncStatus() {
         <div>
           <h2 className="text-lg font-semibold text-white">GitHub Sync</h2>
           <p className="text-sm text-slate-400">
-            Last full sync: {formatTimestamp(stats.lastFullSync)}
+            {!isConfigured
+              ? "Not configured — add GITHUB_TOKEN to enable"
+              : `Last full sync: ${formatTimestamp(stats.lastFullSync)}`}
           </p>
         </div>
         <button
           type="button"
           onClick={handleSyncAll}
-          disabled={syncing}
+          disabled={syncing || !isConfigured}
           className={cn(
             "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-            syncing
+            syncing || !isConfigured
               ? "cursor-not-allowed bg-white/5 text-slate-500"
               : "bg-seridian-500/20 text-seridian-400 hover:bg-seridian-500/30",
           )}
@@ -151,10 +166,10 @@ export function GitHubSyncStatus() {
           <button
             type="button"
             onClick={handleSyncIssues}
-            disabled={syncing}
+            disabled={syncing || !isConfigured}
             className={cn(
               "mt-3 w-full rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-              syncing
+              syncing || !isConfigured
                 ? "cursor-not-allowed bg-white/5 text-slate-500"
                 : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10",
             )}
@@ -188,10 +203,10 @@ export function GitHubSyncStatus() {
           <button
             type="button"
             onClick={handleSyncProjects}
-            disabled={syncing}
+            disabled={syncing || !isConfigured}
             className={cn(
               "mt-3 w-full rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
-              syncing
+              syncing || !isConfigured
                 ? "cursor-not-allowed bg-white/5 text-slate-500"
                 : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10",
             )}

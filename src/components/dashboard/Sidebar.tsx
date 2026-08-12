@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
 import { Button } from "@bytecats/ui-kit";
 import {
@@ -18,8 +19,15 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  BookOpen,
+  Brain,
   type LucideIcon,
 } from "lucide-react";
+
+const ConstellationS = dynamic(
+  () => import("@/components/three/ConstellationS").then((m) => m.ConstellationS),
+  { ssr: false },
+);
 
 interface NavItem {
   href: string;
@@ -39,6 +47,8 @@ const navItems: NavItem[] = [
   { href: "/dashboard/files", label: "Files", icon: Folder, group: "tools" },
   { href: "/dashboard/chat", label: "Chat", icon: MessageSquare, group: "tools" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, group: "tools" },
+  { href: "/dashboard/wiki", label: "Wiki", icon: BookOpen, group: "tools" },
+  { href: "/dashboard/brain", label: "Second Brain", icon: Brain, group: "tools" },
 ];
 
 const groupLabels = { core: "Core", business: "Business", tools: "Tools" } as const;
@@ -109,8 +119,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     >
       <div className={cn("flex h-14 items-center border-b border-white/[0.06]", collapsed ? "justify-center px-2" : "px-4")}>
         <Link href="/" className="flex items-center gap-2.5 outline-none focus-visible:ring-2 focus-visible:ring-seridian-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] rounded-lg">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-seridian-500/10">
-            <span className="font-display text-sm font-bold text-seridian-400">S</span>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-seridian-500/10 overflow-hidden">
+            <ConstellationS size={28} />
           </span>
           {!collapsed && <span className="font-display text-base font-semibold tracking-tight text-white">Seridian</span>}
         </Link>

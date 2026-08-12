@@ -27,8 +27,15 @@ export function SyncDashboard() {
     setSyncingAll(true);
     setLastResult(null);
     try {
-      await Promise.all([syncLinear({}), syncGitHub({})]);
-      setLastResult({ type: "success", message: "All services synced" });
+      const [linearResult, githubResult] = await Promise.all([
+        syncLinear({}).catch((err) => { throw err; }),
+        syncGitHub({}),
+      ]);
+      if (githubResult && !githubResult.configured) {
+        setLastResult({ type: "success", message: "Linear synced. GitHub not configured — skipped." });
+      } else {
+        setLastResult({ type: "success", message: "All services synced" });
+      }
     } catch (err) {
       setLastResult({ type: "error", message: err instanceof Error ? err.message : "Sync failed" });
     } finally {

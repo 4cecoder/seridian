@@ -16,13 +16,24 @@ export function GitHubSyncSection({ onSyncComplete }: GitHubSyncSectionProps) {
   const syncAll = useAction(api.githubSync.syncAllGitHub);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resultMsg, setResultMsg] = useState<string | null>(null);
+
+  const isConfigured = stats?.isConfigured ?? false;
 
   const handleSync = useCallback(async () => {
     setSyncing(true);
     setError(null);
+    setResultMsg(null);
     try {
-      await syncAll({});
-      onSyncComplete?.();
+      const result = await syncAll({});
+      if (!result.configured) {
+        setError("GitHub token is not configured. Add GITHUB_TOKEN to your Convex environment to enable GitHub sync.");
+      } else {
+        setResultMsg(
+          `Synced ${result.issues.total} issues (${result.issues.created} new, ${result.issues.updated} updated) and ${result.projects.total} projects`,
+        );
+        onSyncComplete?.();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sync failed");
     } finally {
@@ -58,13 +69,15 @@ export function GitHubSyncSection({ onSyncComplete }: GitHubSyncSectionProps) {
         <div>
           <h2 className="text-lg font-semibold text-white">GitHub Sync</h2>
           <p className="text-sm text-slate-500">
-            Manage GitHub repository data synchronization
+            {isConfigured
+              ? "Manage GitHub repository data synchronization"
+              : "GitHub integration not configured"}
           </p>
         </div>
         <button
           type="button"
           onClick={handleSync}
-          disabled={syncing}
+          disabled={syncing || !isConfigured}
           className="inline-flex items-center gap-2 rounded-lg bg-seridian-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-seridian-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {syncing ? (
@@ -117,6 +130,22 @@ export function GitHubSyncSection({ onSyncComplete }: GitHubSyncSectionProps) {
         </div>
       )}
 
+      {resultMsg && (
+        <div className="rounded-lg border border-seridian-500/20 bg-seridian-500/10 px-4 py-3 text-sm text-seridian-400">
+          {resultMsg}
+        </div>
+      )}
+
+      {!isConfigured && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
+          <p className="font-medium">GitHub integration requires setup</p>
+          <p className="mt-1 text-amber-400/80">
+            Add a <code className="rounded bg-amber-500/10 px-1">GITHUB_TOKEN</code> environment variable
+            to your Convex deployment to enable GitHub sync.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <SyncCard
           title="Issues"
@@ -127,6 +156,7 @@ export function GitHubSyncSection({ onSyncComplete }: GitHubSyncSectionProps) {
           syncing={syncing}
           onSync={handleSync}
           connected={true}
+          configured={isConfigured}
           details={issueDetails.length > 0 ? issueDetails : undefined}
         />
         <SyncCard
@@ -138,6 +168,7 @@ export function GitHubSyncSection({ onSyncComplete }: GitHubSyncSectionProps) {
           syncing={syncing}
           onSync={handleSync}
           connected={true}
+          configured={isConfigured}
           details={projectDetails.length > 0 ? projectDetails : undefined}
         />
       </div>

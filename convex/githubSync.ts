@@ -369,7 +369,7 @@ export const syncGitHubIssues = action({
   handler: async (ctx, args) => {
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
-      throw new Error("GITHUB_TOKEN is not configured");
+      return { configured: false, created: 0, updated: 0, total: 0 };
     }
 
     const repo = args.repo ?? process.env.GITHUB_REPO ?? "therodfather/seridian";
@@ -386,7 +386,7 @@ export const syncGitHubIssues = action({
       value: Date.now().toString(),
     });
 
-    return result;
+    return { configured: true, ...result };
   },
 });
 
@@ -397,7 +397,7 @@ export const syncGitHubProjects = action({
   handler: async (ctx, args) => {
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
-      throw new Error("GITHUB_TOKEN is not configured");
+      return { configured: false, created: 0, updated: 0, total: 0 };
     }
 
     const org = args.org ?? "therodfather";
@@ -425,12 +425,17 @@ export const syncAllGitHub = action({
   handler: async (
     ctx,
   ): Promise<{
+    configured: boolean;
     issues: SyncResult;
     projects: SyncResult;
   }> => {
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
-      throw new Error("GITHUB_TOKEN is not configured");
+      return {
+        configured: false,
+        issues: { created: 0, updated: 0, total: 0 },
+        projects: { created: 0, updated: 0, total: 0 },
+      };
     }
 
     const repo = process.env.GITHUB_REPO ?? "therodfather/seridian";
@@ -464,6 +469,7 @@ export const syncAllGitHub = action({
     });
 
     return {
+      configured: true,
       issues: issueResult,
       projects: projectResult,
     };

@@ -25,6 +25,7 @@ interface SyncCardProps {
   syncing: boolean;
   onSync: () => void;
   connected: boolean;
+  configured?: boolean;
   className?: string;
   details?: { label: string; value: number | string }[];
   syncLabel?: string;
@@ -39,21 +40,28 @@ export function SyncCard({
   syncing,
   onSync,
   connected,
+  configured = true,
   className,
   details,
   syncLabel,
 }: SyncCardProps) {
+  const isAvailable = connected && configured;
+
   return (
     <div
       className={cn(
         "group flex flex-col justify-between rounded-xl border border-white/[0.08] bg-[#080d1a]/90 p-4 transition-all hover:border-cyan-500/30 hover:bg-[#0c1222] hover:shadow-lg hover:shadow-cyan-950/20",
+        !isAvailable && "opacity-60",
         className
       )}
     >
       <div>
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-500/20 bg-cyan-500/10 text-cyan-400">
+            <div className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-lg border bg-cyan-500/10 text-cyan-400",
+              isAvailable ? "border-cyan-500/20" : "border-slate-500/20 text-slate-500"
+            )}>
               <Icon className="h-4 w-4" />
             </div>
             <div>
@@ -62,11 +70,13 @@ export function SyncCard({
                 <span
                   className={cn(
                     "h-1.5 w-1.5 rounded-full",
-                    connected ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" : "bg-slate-500"
+                    isAvailable
+                      ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
+                      : "bg-slate-500"
                   )}
                 />
                 <span className="text-[10px] font-semibold text-slate-400">
-                  {connected ? "Connected" : "Inactive"}
+                  {!configured ? "Not Configured" : connected ? "Connected" : "Inactive"}
                 </span>
               </div>
             </div>
@@ -75,10 +85,10 @@ export function SyncCard({
           <button
             type="button"
             onClick={onSync}
-            disabled={syncing}
+            disabled={syncing || !isAvailable}
             className={cn(
               "flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-semibold transition-all shrink-0",
-              syncing
+              syncing || !isAvailable
                 ? "border-white/10 bg-white/5 text-slate-500 cursor-not-allowed"
                 : "border-cyan-500/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-500/50"
             )}
@@ -96,7 +106,7 @@ export function SyncCard({
 
       <div className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-2 text-[10.5px] font-mono text-slate-500">
         <span className="flex items-center gap-1 text-slate-400">
-          <Clock className="h-3 w-3 text-slate-500" /> {formatTimeSince(lastSynced)}
+          <Clock className="h-3 w-3 text-slate-500" /> {!configured ? "—" : formatTimeSince(lastSynced)}
         </span>
         {details && details.length > 0 && (
           <span className="text-cyan-400 font-semibold">{details[0].value} {details[0].label}</span>
